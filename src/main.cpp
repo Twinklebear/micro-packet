@@ -70,6 +70,10 @@ struct Vec8 {
 		return _mm256_add_ps(a, _mm256_add_ps(b, c));
 	}
 };
+Vec8 operator-(const Vec8 &a, const Vec8 &b){
+	return Vec8{_mm256_sub_ps(a.x, b.x), _mm256_sub_ps(a.y, b.y),
+		_mm256_sub_ps(a.z, b.z)};
+}
 
 std::ostream& operator<<(std::ostream &os, const Vec8 &v){
 	os << "Vec8:\n\tx = " << v.x
@@ -95,10 +99,11 @@ struct Sphere {
 	Sphere(float x, float y, float z, float radius) : x(x), y(y), z(z), radius(radius) {}
 	// Test 8 rays against the sphere, returns masks for the hits (0xff) and misses (0x00)
 	__m256 intersect(Ray8 &ray) const {
-		// TODO change to handle sphere not at origin
+		const auto center = Vec8{x, y, z};
+		const auto d = center - ray.o;
 		const auto a = ray.d.length_sqr();
-		const auto b = _mm256_mul_ps(ray.d.dot(ray.o), _mm256_set1_ps(2.f));
-		const auto c = _mm256_sub_ps(ray.o.dot(ray.o), _mm256_mul_ps(_mm256_set1_ps(radius),
+		const auto b = _mm256_mul_ps(ray.d.dot(d), _mm256_set1_ps(-2.f));
+		const auto c = _mm256_sub_ps(d.dot(d), _mm256_mul_ps(_mm256_set1_ps(radius),
 					_mm256_set1_ps(radius)));
 		// Solve the quadratic equation and store the mask of potential hits
 		// We'll update this mask as we discard other potential hits, eg. due to
