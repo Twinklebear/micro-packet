@@ -137,6 +137,6 @@ int main(int, char**){
 
 	packet = Ray8{Vec8{0, 0, -2}, Vec8{0, 0, -1}};
 	hits = sphere.intersect(packet);
-	std::cout << "Expect all hits, hits = " << hits << std::endl;
+	std::cout << "Expect all miss, hits = " << hits << std::endl;
 }
 
