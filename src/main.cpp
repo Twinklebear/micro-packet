@@ -48,7 +48,9 @@ __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t
 struct Vec8 {
 	__m256 x, y, z;
 
-	Vec8() : x(_mm256_set1_ps(0)), y(_mm256_set1_ps(0)), z(_mm256_set1_ps(0)){}
+	Vec8(float x = 0, float y = 0, float z = 0)
+		: x(_mm256_set1_ps(x)), y(_mm256_set1_ps(y)), z(_mm256_set1_ps(z))
+	{}
 	Vec8(__m256 x, __m256 y, __m256 z) : x(x), y(y), z(z){}
 	// Compute length^2 of all 8 vectors
 	__m256 length_sqr() const {
@@ -80,9 +82,11 @@ std::ostream& operator<<(std::ostream &os, const Vec8 &v){
 // Packet of 8 rays
 struct Ray8 {
 	Vec8 o, d;
-	__m256 t;
+	__m256 t_max, t_min;
 
-	Ray8() : t(_mm256_set1_ps(FLT_MAX)) {}
+	Ray8(Vec8 o, Vec8 d) : o(o), d(d), t_max(_mm256_set1_ps(FLT_MAX)),
+		t_min(_mm256_set1_ps(0))
+	{}
 };
 
 struct Sphere {
@@ -90,35 +94,49 @@ struct Sphere {
 
 	Sphere(float x, float y, float z, float radius) : x(x), y(y), z(z), radius(radius) {}
 	// Test 8 rays against the sphere, returns masks for the hits (0xff) and misses (0x00)
-	__m256 intersect(const Ray8 &ray){
+	__m256 intersect(Ray8 &ray) const {
 		// TODO change to handle sphere not at origin
 		const auto a = ray.d.length_sqr();
 		const auto b = _mm256_mul_ps(ray.d.dot(ray.o), _mm256_set1_ps(2.f));
 		const auto c = _mm256_sub_ps(ray.o.dot(ray.o), _mm256_mul_ps(_mm256_set1_ps(radius),
 					_mm256_set1_ps(radius)));
-
-		return _mm256_set1_ps(0);
+		// Solve the quadratic equation and store the mask of potential hits
+		// We'll update this mask as we discard other potential hits, eg. due to
+		// the hit being beyond the ray's t value
+		std::cout << "a = " << a
+			<< "\nb = " << b
+			<< "\nc = " << c << std::endl;
+		__m256 t0, t1;
+		auto hits = solve_quadratic(a, b, c, t0, t1);
+		std::cout << "solved quadratic:"
+			<< "\nhits = " << hits
+			<< "\nt0 = " << t0
+			<< "\nt1 = " << t1 << std::endl;
+		// We want t0 to hold the nearest t value that is greater than ray.t_min
+		auto swap_t = _mm256_cmp_ps(t0, ray.t_min, _CMP_GT_OQ);
+		t0 = _mm256_blendv_ps(t0, t1, swap_t);
+		// Check which rays are within the ray's t range
+		auto in_range = _mm256_and_ps(_mm256_cmp_ps(t0, ray.t_min, _CMP_GT_OQ),
+				_mm256_cmp_ps(t0, ray.t_max, _CMP_LT_OQ));
+		hits = _mm256_and_ps(hits, in_range);
+		// Check if all rays miss the sphere
+		if ((_mm256_movemask_ps(hits) & 255) == 0){
+			return hits;
+		}
+		// Update t values for rays that did hit
+		ray.t_max = _mm256_blendv_ps(ray.t_max, t0, hits);
+		return hits;
 	}
 };
 
 int main(int, char**){
-	const std::array<float, 8> a = { 2,   2,  1, -4,  1, 6,  2, 1 };
-   	const std::array<float, 8> b = { 4,  -2, -2,  6,  1, 2,  4, -2 };
-   	const std::array<float, 8> c = { -4, -4, -6,  2, -1, 0, -3, 4 };
-	__m256 va = _mm256_loadu_ps(a.data());
-	__m256 vb = _mm256_loadu_ps(b.data());
-	__m256 vc = _mm256_loadu_ps(c.data());
-	__m256 t0 = _mm256_set1_ps(0);
-	__m256 t1 = _mm256_set1_ps(0);
-	std::cout << "va = " << va
-		<< "\nvb = " << vb
-		<< "\nvc = " << vc << std::endl;
-	__m256 solved = solve_quadratic(va, vb, vc, t0, t1);
-	const int solve_mask = (_mm256_movemask_ps(solved) & 255);
-	std::cout << "Solve mask: 0x" << std::hex << solve_mask << std::dec
-	   << " dec = " << solve_mask << "\n";
-	std::cout << "t0 = " << t0
-		<< "\nt1 = " << t1
-		<< std::endl;
+	const auto sphere = Sphere{0, 0, 0, 1};
+	auto packet = Ray8{Vec8{0, 0, -2}, Vec8{0, 0, 1}};
+	auto hits = sphere.intersect(packet);
+	std::cout << "Expect all hits, hits = " << hits << std::endl;
+
+	packet = Ray8{Vec8{0, 0, -2}, Vec8{0, 0, -1}};
+	hits = sphere.intersect(packet);
+	std::cout << "Expect all hits, hits = " << hits << std::endl;
 }
 
