@@ -1,15 +1,54 @@
 #include <iostream>
+#include <array>
+#include <iomanip>
 #include <cfloat>
 #include "immintrin.h"
 
+std::ostream& operator<<(std::ostream &os, const __m256 &v){
+	float *f = (float*)&v;
+	os << "{ ";
+	for (int i = 0; i < 8; ++i){
+		os << f[i];
+		if (i < 7){
+			os << ", ";
+		}
+	}
+	os << " }";
+	return os;
+}
+
 // Attempt to solve the quadratic equation. Returns a mask of successful solutions (0xff)
 // and stores the computed t values in t0 and t1
-__m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t0, __m256 &t1){
+// TODO: Alignment hell?
+__m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c){
 	auto discrim = _mm256_sub_ps(_mm256_mul_ps(b, b),
 			_mm256_mul_ps(_mm256_mul_ps(a, c), _mm256_set1_ps(4.f)));
-	auto mask = _mm256_cmp_ps(discrim, _mm256_set1_ps(0), _CMP_LE_OQ);
-	// TODO: Finish computing the t0 & t1 for those with mask = 0xff
-	return mask;
+	auto solved = _mm256_cmp_ps(discrim, _mm256_set1_ps(0), _CMP_GT_OQ);
+	std::cout << "discrim = " << discrim << "\n";
+	std::cout << "solved = " << solved << "\n";
+	// Test for the case where none of the equations can be solved (eg. none hit)
+	// TODO: Is this & necessary?
+	if ((_mm256_movemask_ps(solved) & 255) == 0){
+		return solved;
+	}
+	// Compute +/-sqrt(discrim), setting -discrim where we have b < 0
+	discrim = _mm256_sqrt_ps(discrim);
+	auto neg_discrim = _mm256_mul_ps(discrim, _mm256_set1_ps(-1.f));
+	// Blend the discriminants to pick the right +/- value
+	// Find mask for this with b < 0 set to 1
+	auto mask = _mm256_cmp_ps(b, _mm256_set1_ps(0), _CMP_LT_OQ);
+	discrim = _mm256_blendv_ps(discrim, neg_discrim, mask);
+	auto q = _mm256_mul_ps(_mm256_set1_ps(-0.5f), _mm256_add_ps(b, discrim));
+	auto x = _mm256_div_ps(q, a);
+	auto y = _mm256_div_ps(c, q);
+	// Find which elements have t0 > t1 and compute mask so we can swap them
+	mask = _mm256_cmp_ps(x, y, _CMP_GT_OQ);
+	auto t0 = _mm256_blendv_ps(x, y, mask);
+	auto t1 = _mm256_blendv_ps(y, x, mask);
+	std::cout << "t0 = " << t0
+		<< "\nt1 = " << t1
+		<< std::endl;
+	return solved;
 }
 
 // structure holding 8 vec3's
@@ -37,6 +76,14 @@ struct Vec8 {
 	}
 };
 
+std::ostream& operator<<(std::ostream &os, const Vec8 &v){
+	os << "Vec8:\n\tx = " << v.x
+		<< "\n\ty = " << v.y
+		<< "\n\tz = " << v.z
+		<< "\n";
+	return os;
+}
+
 // Packet of 8 rays
 struct Ray8 {
 	Vec8 o, d;
@@ -54,12 +101,25 @@ struct Sphere {
 		// TODO change to handle sphere not at origin
 		const auto a = ray.d.length_sqr();
 		const auto b = _mm256_mul_ps(ray.d.dot(ray.o), _mm256_set1_ps(2.f));
-		const auto c = _mm256_sub_ps(ray.o.dot(ray.o), _mm256_mul_ps(_mm256_set1_ps(radius), _mm256_set1_ps(radius)));
+		const auto c = _mm256_sub_ps(ray.o.dot(ray.o), _mm256_mul_ps(_mm256_set1_ps(radius),
+					_mm256_set1_ps(radius)));
 
 		return _mm256_set1_ps(0);
 	}
 };
 
 int main(int, char**){
+	std::array<float, 8> a, b, c;
+	a.fill(2);
+	b.fill(4);
+	c.fill(-4);
+	__m256 va = _mm256_loadu_ps(a.data());
+	__m256 vb = _mm256_loadu_ps(b.data());
+	__m256 vc = _mm256_loadu_ps(c.data());
+	__m256 t = _mm256_set1_ps(0);
+	__m256 solved = solve_quadratic(va, vb, vc);
+	const int solve_mask = (_mm256_movemask_ps(solved) & 255);
+	std::cout << "Solve mask: 0x" << std::hex << solve_mask << std::dec << "\n";
+	std::cout << "t = " << t << std::endl;
 }
 

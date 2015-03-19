@@ -20,6 +20,7 @@ scenes/volumes
 # Ignored ycm compiled python file
 *.pyc
 *.ycm*.py
+tags
 
 # Swap files
 *.swp
