@@ -23,10 +23,7 @@ __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t
 	auto discrim = _mm256_sub_ps(_mm256_mul_ps(b, b),
 			_mm256_mul_ps(_mm256_mul_ps(a, c), _mm256_set1_ps(4.f)));
 	auto solved = _mm256_cmp_ps(discrim, _mm256_set1_ps(0), _CMP_GT_OQ);
-	std::cout << "discrim = " << discrim << "\n";
-	std::cout << "solved = " << solved << "\n";
 	// Test for the case where none of the equations can be solved (eg. none hit)
-	// TODO: Is this & necessary?
 	if ((_mm256_movemask_ps(solved) & 255) == 0){
 		return solved;
 	}
@@ -44,13 +41,10 @@ __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t
 	mask = _mm256_cmp_ps(x, y, _CMP_GT_OQ);
 	t0 = _mm256_blendv_ps(x, y, mask);
 	t1 = _mm256_blendv_ps(y, x, mask);
-	std::cout << "t0 = " << t0
-		<< "\nt1 = " << t1
-		<< std::endl;
 	return solved;
 }
 
-// structure holding 8 vec3's
+// Struct holding 8 vec3's
 struct Vec8 {
 	__m256 x, y, z;
 
@@ -108,18 +102,21 @@ struct Sphere {
 };
 
 int main(int, char**){
-	std::array<float, 8> a, b, c;
-	a.fill(2);
-	b.fill(4);
-	c.fill(-4);
+	const std::array<float, 8> a = { 2,   2,  1, -4,  1, 6,  2, 1 };
+   	const std::array<float, 8> b = { 4,  -2, -2,  6,  1, 2,  4, -2 };
+   	const std::array<float, 8> c = { -4, -4, -6,  2, -1, 0, -3, 4 };
 	__m256 va = _mm256_loadu_ps(a.data());
 	__m256 vb = _mm256_loadu_ps(b.data());
 	__m256 vc = _mm256_loadu_ps(c.data());
 	__m256 t0 = _mm256_set1_ps(0);
 	__m256 t1 = _mm256_set1_ps(0);
+	std::cout << "va = " << va
+		<< "\nvb = " << vb
+		<< "\nvc = " << vc << std::endl;
 	__m256 solved = solve_quadratic(va, vb, vc, t0, t1);
 	const int solve_mask = (_mm256_movemask_ps(solved) & 255);
-	std::cout << "Solve mask: 0x" << std::hex << solve_mask << std::dec << "\n";
+	std::cout << "Solve mask: 0x" << std::hex << solve_mask << std::dec
+	   << " dec = " << solve_mask << "\n";
 	std::cout << "t0 = " << t0
 		<< "\nt1 = " << t1
 		<< std::endl;
