@@ -135,18 +135,18 @@ struct Sphere {
 };
 
 int main(int, char**){
-	const auto sphere = Sphere{0, 0, 0, 1};
+	const auto sphere = Sphere{0, 1, 0, 1};
 	std::cout << "All hit packet:\n";
-	auto packet = Ray8{Vec8{0, 0, -2}, Vec8{0, 0, 1}};
+	auto packet = Ray8{Vec8{0, 1, -2}, Vec8{0, 0, 1}};
 	auto hits = sphere.intersect(packet);
 	std::cout << "hits = " << hits << std::endl;
 
 	std::cout << "\nAll miss packet:\n";
-	packet = Ray8{Vec8{0, 0, -2}, Vec8{0, 0, -1}};
+	packet = Ray8{Vec8{0, 1, -2}, Vec8{0, 0, -1}};
 	hits = sphere.intersect(packet);
 	std::cout << "hits = " << hits << std::endl;
 
-	std::cout << "\nMixed packet, expect second and last to hit:\n";
+	std::cout << "\nMixed packet, expect first two to hit:\n";
 	const std::array<float, 8> dir_x{0, 0, 1, -1, 1, -1, 1, 0};
 	const std::array<float, 8> dir_y{1, 0.25, 0, 0, 1, 1, -1, 0};
 	auto dir_z = _mm256_set1_ps(1);
