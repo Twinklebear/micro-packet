@@ -19,8 +19,7 @@ std::ostream& operator<<(std::ostream &os, const __m256 &v){
 
 // Attempt to solve the quadratic equation. Returns a mask of successful solutions (0xff)
 // and stores the computed t values in t0 and t1
-// TODO: Alignment hell?
-__m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c){
+__m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t0, __m256 &t1){
 	auto discrim = _mm256_sub_ps(_mm256_mul_ps(b, b),
 			_mm256_mul_ps(_mm256_mul_ps(a, c), _mm256_set1_ps(4.f)));
 	auto solved = _mm256_cmp_ps(discrim, _mm256_set1_ps(0), _CMP_GT_OQ);
@@ -43,8 +42,8 @@ __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c){
 	auto y = _mm256_div_ps(c, q);
 	// Find which elements have t0 > t1 and compute mask so we can swap them
 	mask = _mm256_cmp_ps(x, y, _CMP_GT_OQ);
-	auto t0 = _mm256_blendv_ps(x, y, mask);
-	auto t1 = _mm256_blendv_ps(y, x, mask);
+	t0 = _mm256_blendv_ps(x, y, mask);
+	t1 = _mm256_blendv_ps(y, x, mask);
 	std::cout << "t0 = " << t0
 		<< "\nt1 = " << t1
 		<< std::endl;
@@ -116,10 +115,13 @@ int main(int, char**){
 	__m256 va = _mm256_loadu_ps(a.data());
 	__m256 vb = _mm256_loadu_ps(b.data());
 	__m256 vc = _mm256_loadu_ps(c.data());
-	__m256 t = _mm256_set1_ps(0);
-	__m256 solved = solve_quadratic(va, vb, vc);
+	__m256 t0 = _mm256_set1_ps(0);
+	__m256 t1 = _mm256_set1_ps(0);
+	__m256 solved = solve_quadratic(va, vb, vc, t0, t1);
 	const int solve_mask = (_mm256_movemask_ps(solved) & 255);
 	std::cout << "Solve mask: 0x" << std::hex << solve_mask << std::dec << "\n";
-	std::cout << "t = " << t << std::endl;
+	std::cout << "t0 = " << t0
+		<< "\nt1 = " << t1
+		<< std::endl;
 }
 
