@@ -143,10 +143,10 @@ inline std::ostream& operator<<(std::ostream &os, const Vec2f_8 &v){
 // Packet of 8 rays
 struct Ray8 {
 	Vec3f_8 o, d;
-	__m256 t_max, t_min;
+	__m256 t_min, t_max;
 
-	Ray8(Vec3f_8 o = Vec3f_8{}, Vec3f_8 d = Vec3f_8{}) : o(o), d(d), t_max(_mm256_set1_ps(INFINITY)),
-		t_min(_mm256_set1_ps(0))
+	Ray8(Vec3f_8 o = Vec3f_8{}, Vec3f_8 d = Vec3f_8{}, float t_min = 0, float t_max = INFINITY)
+		: o(o), d(d), t_min(_mm256_set1_ps(t_min)), t_max(_mm256_set1_ps(t_max))
 	{}
 };
 inline std::ostream& operator<<(std::ostream &os, const Ray8 &r){
