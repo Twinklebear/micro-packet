@@ -1,0 +1,23 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
+#include "immintrin.h"
+#include "vec.h"
+
+/*
+ * Simple perspective camera. Perhaps later switch to have transformation matrices?
+ * would make it easier to have interactive rendering and could add in my glt arball camera
+ */
+struct PerspectiveCamera {
+	// dir_top_left is the direction from the camera to the top left of the image
+	Vec3f pos, dir, up, dir_top_left, screen_du, screen_dv;
+
+	PerspectiveCamera(Vec3f pos, Vec3f center, Vec3f up, float fovy, float aspect);
+	/*
+	 * Generate a ray packet sampling the 8 screen positions passed
+	 */
+	void generate_rays(Ray8 &rays, const Vec2f_8 &samples) const;
+};
+
+#endif
+
