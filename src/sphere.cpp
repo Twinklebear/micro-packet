@@ -17,7 +17,7 @@ __m256 Sphere::intersect(Ray8 &ray) const {
 	// We want t0 to hold the nearest t value that is greater than ray.t_min
 	auto swap_t = _mm256_cmp_ps(t0, ray.t_min, _CMP_LT_OQ);
 	t0 = _mm256_blendv_ps(t0, t1, swap_t);
-	// Check which rays are within the ray's t range
+	// Check which hits are within the ray's t range
 	auto in_range = _mm256_and_ps(_mm256_cmp_ps(t0, ray.t_min, _CMP_GT_OQ),
 			_mm256_cmp_ps(t0, ray.t_max, _CMP_LT_OQ));
 	hits = _mm256_and_ps(hits, in_range);

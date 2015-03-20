@@ -4,11 +4,13 @@
 #include "render_target.h"
 #include "camera.h"
 #include "sphere.h"
+#include "plane.h"
 
 int main(int, char**){
 	const uint32_t width = 800;
 	const uint32_t height = 600;
-	const auto sphere = Sphere{Vec3f{0}, 1.25};
+	const auto sphere = Sphere{Vec3f{0}, 0.5};
+	const auto plane = Plane{Vec3f{0, -2, 0}, Vec3f{0, 1, 0}};
 	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
 		60.f, static_cast<float>(width) / height};
 	auto target = RenderTarget{width, height};
@@ -26,7 +28,8 @@ int main(int, char**){
 		Ray8 packet;
 		camera.generate_rays(packet, samples / img_dim);
 
-		auto hits = sphere.intersect(packet);
+		auto hits = plane.intersect(packet);
+		hits = _mm256_or_ps(hits, sphere.intersect(packet));
 		target.write_samples(samples, Colorf_8{1}, hits);
 	}
 	target.save_image("out.bmp");
