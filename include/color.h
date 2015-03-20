@@ -111,6 +111,12 @@ inline Colorf_8 operator/(const Colorf_8 &c, float s){
 	return Colorf_8{_mm256_mul_ps(c.r, vs), _mm256_mul_ps(c.g, vs),
 		_mm256_mul_ps(c.b, vs)};
 }
+inline std::ostream& operator<<(std::ostream &os, const Colorf_8 &c){
+	os << "Colorf_8:\nr = " << c.r
+		<< "\ng = " << c.g
+		<< "\nb = " << c.b;
+	return os;
+}
 
 /*
  * Struct storing a single RGB floating point color

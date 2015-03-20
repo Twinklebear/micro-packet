@@ -125,6 +125,9 @@ struct Vec2f_8 {
 	inline Vec2f_8(float x = 0, float y = 0) : x(_mm256_set1_ps(x)), y(_mm256_set1_ps(y)){}
 	inline Vec2f_8(__m256 x, __m256 y) : x(x), y(y){}
 };
+inline Vec2f_8 operator-(const Vec2f_8 &a, const Vec2f_8 &b){
+	return Vec2f_8{_mm256_sub_ps(a.x, b.x), _mm256_sub_ps(a.y, b.y)};
+}
 inline Vec2f_8 operator/(const Vec2f_8 &a, const Vec2f_8 &b){
 	return Vec2f_8{_mm256_div_ps(a.x, b.x), _mm256_div_ps(a.y, b.y)};
 }
