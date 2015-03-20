@@ -81,7 +81,7 @@ int main(int, char**){
 	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
 		60.f, static_cast<float>(width) / height};
 	auto target = RenderTarget{width, height};
-	const auto img_dim = Vec2f_8{width, height};
+	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
 	// TODO: Z-order 4x4 blocks
 	const int n_pixels = width * height;
 	for (int i = 0; i < n_pixels; i += 8){

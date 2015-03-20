@@ -1,6 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+#include <cstdint>
 #include <array>
 #include <cassert>
 #include <ostream>
