@@ -19,6 +19,11 @@ std::ostream& operator<<(std::ostream &os, const __m256 &v){
 	return os;
 }
 
+template<typename T>
+T clamp(T x, T min, T max){
+	return x < min ? min : x > max ? max : x;
+}
+
 // Attempt to solve the quadratic equation. Returns a mask of successful solutions (0xff)
 // and stores the computed t values in t0 and t1
 __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t0, __m256 &t1){
@@ -237,7 +242,11 @@ struct PerspectiveCamera {
 		screen_dv = dy * dim_y;
 		std::cout << "dir_top_left = " << dir_top_left
 			<< "\nscreen_du = " << screen_du
-			<< "\nscreen_dv = " << screen_dv << "\n";
+			<< "\nscreen_dv = " << screen_dv
+			<< "\ndx = " << dx
+			<< "\ndim_x = " << dim_x
+			<< "\ndy = " << dy
+			<< "\ndim_y = " << dim_y << "\n";
 	}
 	// Generate a ray packet sampling the 8 screen positions passed
 	void generate_rays(Ray8 &rays, const Vec2f_8 &samples) const {
@@ -257,20 +266,73 @@ struct PerspectiveCamera {
 };
 
 int main(int, char**){
-	const auto sphere = Sphere{0, 0, 0, 2};
-	const auto camera = PerspectiveCamera{Vec3f{0, 0, -5}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0}, 30.f, 1.f};
-	std::array<float, 8> pixel_x, pixel_y;
-	for (int i = 0; i < 8; ++i){
+	const auto sphere = Sphere{0, 0, 0, 1};
+	const auto camera = PerspectiveCamera{Vec3f{0, 0, -2}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0}, 30.f, 1.f};
+	std::array<float, 16> pixel_x, pixel_y;
+	for (int i = 0; i < 16; ++i){
 		pixel_x[i] = i % 4;
 		pixel_y[i] = i / 4;
 	}
-	const auto samples = Vec2f_8{_mm256_loadu_ps(pixel_x.data()), _mm256_loadu_ps(pixel_y.data())};
-	std::cout << "Samples = " << samples << "\n";
-	Ray8 packet;
-	camera.generate_rays(packet, samples);
-	std::cout << "packet = " << packet << std::endl;
-	auto hits = sphere.intersect(packet);
-	std::cout << "Actual hits = " << hits << std::endl;
-	std::cout << "packet post hit: " << packet << std::endl;
+	const auto samples_top = Vec2f_8{_mm256_loadu_ps(pixel_x.data()), _mm256_loadu_ps(pixel_y.data())};
+	const auto samples_bot = Vec2f_8{_mm256_loadu_ps(pixel_x.data() + 8), _mm256_loadu_ps(pixel_y.data() + 8)};
+	std::cout << "samples_top = " << samples_top
+	   << "\nsamples_bot = " << samples_bot << "\n";
+	// packet_top tests the upper 4x2 region while packet_bot checks the lower 4x2 region
+	Ray8 packet_top, packet_bot;
+	camera.generate_rays(packet_top, samples_top);
+	camera.generate_rays(packet_bot, samples_bot);
+	std::cout << "packet_top = " << packet_top
+	   << "\npacket_bot = " << packet_bot << std::endl;
+	// We're rendering a 4x4 'image'
+	std::array<char, 4 * 4> image;
+	image.fill(' ');
+	{
+		std::cout << "Checking top hits\n";
+		auto hits = sphere.intersect(packet_top);
+		std::cout << "Actual hits = " << hits << std::endl;
+		std::cout << "packet post hit: " << packet_top << std::endl;
+
+		int hit_mask = _mm256_movemask_ps(hits);
+		std::cout << "hit mask = " << std::hex << hit_mask << std::dec << std::endl;
+		for (int mask = 1, i = 0; i < 8; mask <<= 1, ++i){
+			std::cout << "checking for hit at index " << i
+				<< ", using mask " << std::hex << mask << std::dec << std::endl;
+			if (hit_mask & mask){
+				const float *x = (const float*)&samples_top.x;
+				const float *y = (const float*)&samples_top.y;
+				std::cout << "there was a hit for pixel { " << x[i] << ", " << y[i] << " }\n";
+				const int px_x = clamp(x[i], 0.f, 4.f);
+				const int px_y = clamp(y[i], 0.f, 4.f);
+				image[px_y * 4 + px_x] = 'X';
+			}
+		}
+	}
+	{
+		std::cout << "Checking bot hits\n";
+		auto hits = sphere.intersect(packet_bot);
+		std::cout << "Actual hits = " << hits << std::endl;
+		std::cout << "packet post hit: " << packet_bot << std::endl;
+
+		int hit_mask = _mm256_movemask_ps(hits);
+		std::cout << "hit mask = " << std::hex << hit_mask << std::dec << std::endl;
+		for (int mask = 1, i = 0; i < 8; mask <<= 1, ++i){
+			std::cout << "checking for hit at index " << i
+				<< ", using mask " << std::hex << mask << std::dec << std::endl;
+			if (hit_mask & mask){
+				const float *x = (const float*)&samples_bot.x;
+				const float *y = (const float*)&samples_bot.y;
+				std::cout << "there was a hit for pixel { " << x[i] << ", " << y[i] << " }\n";
+				const int px_x = clamp(x[i], 0.f, 4.f);
+				const int px_y = clamp(y[i], 0.f, 4.f);
+				image[px_y * 4 + px_x] = 'X';
+			}
+		}
+	}
+	for (int y = 0; y < 4; ++y){
+		for (int x = 0; x < 4; ++x){
+			std::cout << image[y * 4 + x];
+		}
+		std::cout << "\n";
+	}
 }
 
