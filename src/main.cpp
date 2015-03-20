@@ -8,7 +8,7 @@
 int main(int, char**){
 	const uint32_t width = 800;
 	const uint32_t height = 600;
-	const auto sphere = Sphere{0, 0, 0, 1.25};
+	const auto sphere = Sphere{Vec3f{0}, 1.25};
 	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
 		60.f, static_cast<float>(width) / height};
 	auto target = RenderTarget{width, height};

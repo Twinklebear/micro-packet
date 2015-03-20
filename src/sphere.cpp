@@ -1,9 +1,8 @@
-#include "vec.h"
 #include "sphere.h"
 
-Sphere::Sphere(float x, float y, float z, float radius) : x(x), y(y), z(z), radius(radius){}
+Sphere::Sphere(Vec3f pos, float radius) : pos(pos), radius(radius){}
 __m256 Sphere::intersect(Ray8 &ray) const {
-	const auto center = Vec3f_8{x, y, z};
+	const auto center = Vec3f_8{pos};
 	const auto d = center - ray.o;
 	const auto a = ray.d.length_sqr();
 	const auto b = _mm256_mul_ps(ray.d.dot(d), _mm256_set1_ps(-2.f));

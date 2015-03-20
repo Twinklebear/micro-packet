@@ -74,6 +74,8 @@ struct Vec3f_8 {
 
 	inline Vec3f_8(float x = 0, float y = 0, float z = 0)
 		: x(_mm256_set1_ps(x)), y(_mm256_set1_ps(y)), z(_mm256_set1_ps(z)){}
+	inline Vec3f_8(Vec3f v)
+		: x(_mm256_set1_ps(v.x)), y(_mm256_set1_ps(v.y)), z(_mm256_set1_ps(v.z)){}
 	inline Vec3f_8(__m256 x, __m256 y, __m256 z) : x(x), y(y), z(z){}
 	// Compute length^2 of all 8 vectors
 	inline __m256 length_sqr() const {
