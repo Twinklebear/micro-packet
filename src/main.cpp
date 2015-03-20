@@ -1,9 +1,3 @@
-#define _USE_MATH_DEFINES
-#include <cmath>
-#include <iostream>
-#include <array>
-#include <iomanip>
-#include <cfloat>
 #include "immintrin.h"
 #include "vec.h"
 #include "color.h"
