@@ -6,6 +6,8 @@
 #include <cfloat>
 #include "immintrin.h"
 #include "vec.h"
+#include "color.h"
+#include "render_target.h"
 
 struct Sphere {
 	float x, y, z, radius;
@@ -93,6 +95,7 @@ struct PerspectiveCamera {
 int main(int, char**){
 	const auto sphere = Sphere{0, 0, 0, 1.25};
 	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0}, 60.f, 1.f};
+	auto target = RenderTarget{4, 4};
 	std::array<float, 16> pixel_x, pixel_y;
 	for (int i = 0; i < 16; ++i){
 		pixel_x[i] = 0.5 + i % 4;
@@ -119,6 +122,7 @@ int main(int, char**){
 	{
 		std::cout << "Checking top hits\n";
 		auto hits = sphere.intersect(packet_top);
+		target.write_samples(samples_top, Colorf_8{1}, hits);
 		std::cout << "Actual hits = " << hits << std::endl;
 		std::cout << "packet post hit: " << packet_top << std::endl;
 
@@ -140,6 +144,7 @@ int main(int, char**){
 	{
 		std::cout << "Checking bot hits\n";
 		auto hits = sphere.intersect(packet_bot);
+		target.write_samples(samples_bot, Colorf_8{1}, hits);
 		std::cout << "Actual hits = " << hits << std::endl;
 		std::cout << "packet post hit: " << packet_bot << std::endl;
 
@@ -164,5 +169,6 @@ int main(int, char**){
 		}
 		std::cout << "\n";
 	}
+	target.save_image("out.bmp");
 }
 
