@@ -158,6 +158,9 @@ struct Vec2f_8 {
 	Vec2f_8(float x = 0, float y = 0) : x(_mm256_set1_ps(x)), y(_mm256_set1_ps(y)){}
 	Vec2f_8(__m256 x, __m256 y) : x(x), y(y){}
 };
+Vec2f_8 operator/(const Vec2f_8 &a, const Vec2f_8 &b){
+	return Vec2f_8{_mm256_div_ps(a.x, b.x), _mm256_div_ps(a.y, b.y)};
+}
 std::ostream& operator<<(std::ostream &os, const Vec2f_8 &v){
 	os << "Vec2f_8:\n\tx = " << v.x
 		<< "\n\ty = " << v.y;
@@ -266,21 +269,26 @@ struct PerspectiveCamera {
 };
 
 int main(int, char**){
-	const auto sphere = Sphere{0, 0, 0, 1};
-	const auto camera = PerspectiveCamera{Vec3f{0, 0, -2}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0}, 30.f, 1.f};
+	const auto sphere = Sphere{0, 0, 0, 1.25};
+	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0}, 60.f, 1.f};
 	std::array<float, 16> pixel_x, pixel_y;
 	for (int i = 0; i < 16; ++i){
-		pixel_x[i] = i % 4;
-		pixel_y[i] = i / 4;
+		pixel_x[i] = 0.5 + i % 4;
+		pixel_y[i] = 0.5 + i / 4;
 	}
-	const auto samples_top = Vec2f_8{_mm256_loadu_ps(pixel_x.data()), _mm256_loadu_ps(pixel_y.data())};
-	const auto samples_bot = Vec2f_8{_mm256_loadu_ps(pixel_x.data() + 8), _mm256_loadu_ps(pixel_y.data() + 8)};
+	const auto img_dim = Vec2f_8{4, 4};
+	const auto samples_top = Vec2f_8{_mm256_loadu_ps(pixel_x.data()),
+		_mm256_loadu_ps(pixel_y.data())};
+	const auto samples_bot = Vec2f_8{_mm256_loadu_ps(pixel_x.data() + 8),
+		_mm256_loadu_ps(pixel_y.data() + 8)};
 	std::cout << "samples_top = " << samples_top
 	   << "\nsamples_bot = " << samples_bot << "\n";
 	// packet_top tests the upper 4x2 region while packet_bot checks the lower 4x2 region
 	Ray8 packet_top, packet_bot;
-	camera.generate_rays(packet_top, samples_top);
-	camera.generate_rays(packet_bot, samples_bot);
+	std::cout << "Making ray packet for top 4x2 region\n";
+	camera.generate_rays(packet_top, samples_top / img_dim);
+	std::cout << "Making ray packet for bottom 4x2 region\n";
+	camera.generate_rays(packet_bot, samples_bot / img_dim);
 	std::cout << "packet_top = " << packet_top
 	   << "\npacket_bot = " << packet_bot << std::endl;
 	// We're rendering a 4x4 'image'
