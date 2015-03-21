@@ -132,9 +132,9 @@ inline Vec3f_8 operator-(const Vec3f_8 &a, const Vec3f_8 &b){
 		_mm256_sub_ps(a.z, b.z)};
 }
 inline Vec3f_8 operator-(const Vec3f_8 &a){
-	const auto neg = _mm256_set1_ps(-1);
-	return Vec3f_8{_mm256_mul_ps(a.x, neg), _mm256_mul_ps(a.y, neg),
-		_mm256_mul_ps(a.z, neg)};
+	const auto neg = _mm256_set1_ps(-0.f);
+	return Vec3f_8{_mm256_xor_ps(a.x, neg), _mm256_xor_ps(a.y, neg),
+		_mm256_xor_ps(a.z, neg)};
 }
 // Scale all components of the vector
 inline Vec3f_8 operator*(__m256 s, const Vec3f_8 &v){
