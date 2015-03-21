@@ -58,6 +58,9 @@ int main(int, char**){
 			// if it will be nicer than this
 			std::array<int32_t, 8> mat_ids;
 			_mm256_storeu_si256((__m256i*)mat_ids.data(), dg.material_id);
+			// std::unique just removes consecutive repeated elements, so sort things first so we
+			// don't get something like -1, 0, -1 or such
+			std::sort(std::begin(mat_ids), std::end(mat_ids));
 			std::unique(std::begin(mat_ids), std::end(mat_ids));
 			for (const auto &i : mat_ids){
 				if (i == -1){
