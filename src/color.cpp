@@ -21,15 +21,15 @@ bool Colorf::is_black() const {
 	return r == 0 && g == 0 && b == 0;
 }
 Colorf Colorf::to_sRGB() const {
-	const float a = 0.055;
+	const float a = 0.055f;
 	const float b = 1.f / 2.4f;
 	Colorf srgb;
 	for (int i = 0; i < 3; ++i){
-		if ((*this)[i] <= 0.0031308){
-			srgb[i] = 12.92 * (*this)[i];
+		if ((*this)[i] <= 0.0031308f){
+			srgb[i] = 12.92f * (*this)[i];
 		}
 		else {
-			srgb[i] = (1 + a) * std::pow((*this)[i], b) - a;
+			srgb[i] = (1.f + a) * std::pow((*this)[i], b) - a;
 		}
 	}
 	return srgb;

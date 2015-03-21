@@ -26,14 +26,14 @@ struct Pixel {
  * along with for some reason a depth buffer is required for proj1?
  */
 class RenderTarget {
-	size_t width, height;
+	uint32_t width, height;
 	std::vector<Pixel> pixels;
 
 public:
 	/*
 	 * Create a render target with width * height pixels
 	 */
-	RenderTarget(size_t width, size_t height);
+	RenderTarget(uint32_t width, uint32_t height);
 	/*
 	 * Write a color samples to the image, the mask will specify
 	 * which color should actually be stored (0xff to store)
@@ -41,8 +41,8 @@ public:
 	void write_samples(const Vec2f_8 &p, const Colorf_8 &c, __m256 mask);
 	//Save the image or depth buffer to the desired file
 	bool save_image(const std::string &file) const;
-	size_t get_width() const;
-	size_t get_height() const;
+	uint32_t get_width() const;
+	uint32_t get_height() const;
 	/*
 	 * Get a snapshot of the color buffer at the moment
 	 * stored in img

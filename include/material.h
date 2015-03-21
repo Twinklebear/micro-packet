@@ -13,7 +13,7 @@ struct LambertianMaterial : Material {
 
 	inline LambertianMaterial(Colorf color) : color(color){}
 	inline Colorf_8 shade(const Vec3f_8&, const Vec3f_8&) const {
-		return Colorf_8{color * M_1_PI};
+		return Colorf_8{color * static_cast<float>(M_1_PI)};
 	}
 };
 

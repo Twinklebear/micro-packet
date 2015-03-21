@@ -40,8 +40,8 @@ int main(int, char**){
 	for (int i = 0; i < n_pixels; i += 8){
 		std::array<float, 8> pixel_x, pixel_y;
 		for (int j = 0; j < 8; ++j){
-			pixel_x[j] = 0.5 + i % width + j;
-			pixel_y[j] = 0.5 + i / width;
+			pixel_x[j] = 0.5f + i % width + j;
+			pixel_y[j] = 0.5f + i / width;
 		}
 		const auto samples = Vec2f_8{_mm256_loadu_ps(pixel_x.data()),
 			_mm256_loadu_ps(pixel_y.data())};

@@ -99,13 +99,13 @@ inline __m256 vpow(__m256 vx, __m256 vy){
 }
 // Compute sRGB values for some color channel
 inline __m256 convert_srgb(__m256 x){
-	const static auto a = _mm256_set1_ps(0.055);
-	const static auto b = _mm256_rcp_ps(_mm256_set1_ps(2.4));		
-	const auto mask = _mm256_cmp_ps(x, _mm256_set1_ps(0.0031308), _CMP_LE_OQ);
+	const static auto a = _mm256_set1_ps(0.055f);
+	const static auto b = _mm256_rcp_ps(_mm256_set1_ps(2.4f));		
+	const auto mask = _mm256_cmp_ps(x, _mm256_set1_ps(0.0031308f), _CMP_LE_OQ);
 	// We need to compute both branches for the sRGB conversion then pick
 	// the right one based on the mask
-	const auto y = _mm256_mul_ps(x, _mm256_set1_ps(12.92));
-	const auto z = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(1.055), vpow(x, b)), a);
+	const auto y = _mm256_mul_ps(x, _mm256_set1_ps(12.92f));
+	const auto z = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(1.055f), vpow(x, b)), a);
 	return _mm256_blendv_ps(y, z, mask);
 }
 

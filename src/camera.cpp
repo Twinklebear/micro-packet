@@ -8,7 +8,7 @@ PerspectiveCamera::PerspectiveCamera(Vec3f pos, Vec3f center, Vec3f up, float fo
 	Vec3f dz = dir.normalized();
 	Vec3f dx = -dz.cross(up).normalized();
 	Vec3f dy = dx.cross(dz).normalized();
-	float dim_y = 2.f * std::sin((fovy / 2.f) * (M_PI / 180.f));
+	float dim_y = 2.f * std::sin((fovy / 2.f) * (static_cast<float>(M_PI) / 180.f));
 	float dim_x = dim_y * aspect;
 	dir_top_left = dz - 0.5f * dim_x * dx - 0.5f * dim_y * dy;
 	screen_du = dx * dim_x;

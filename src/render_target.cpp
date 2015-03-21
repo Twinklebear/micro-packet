@@ -48,7 +48,7 @@ struct BMPHeader {
 Pixel::Pixel() : r(0), g(0), b(0), weight(0){}
 Pixel::Pixel(const Pixel &p) : r(p.r), g(p.g), b(p.b), weight(p.weight){}
 
-RenderTarget::RenderTarget(size_t width, size_t height)
+RenderTarget::RenderTarget(uint32_t width, uint32_t height)
 	: width(width), height(height), pixels(width * height){}
 void RenderTarget::write_samples(const Vec2f_8 &p, const Colorf_8 &c, __m256 mask){
 	// Compute the discrete pixel coordinates which the sample hits
@@ -84,10 +84,10 @@ bool RenderTarget::save_image(const std::string &file) const {
 		std::vector<Color24> img(width * height);
 		get_colorbuf(img);
 		//Do y-flip for BMP since BMP starts at the bottom-left
-		for (size_t y = 0; y < height / 2; ++y){
+		for (uint32_t y = 0; y < height / 2; ++y){
 			Color24 *a = &img[y * width];
 			Color24 *b = &img[(height - y - 1) * width];
-			for (size_t x = 0; x < width; ++x){
+			for (uint32_t x = 0; x < width; ++x){
 				std::swap(a[x], b[x]);
 			}
 		}
@@ -100,17 +100,17 @@ bool RenderTarget::save_image(const std::string &file) const {
 	std::cout << "Unsupported output image format: " << file_ext << std::endl;
 	return false;
 }
-size_t RenderTarget::get_width() const {
+uint32_t RenderTarget::get_width() const {
 	return width;
 }
-size_t RenderTarget::get_height() const {
+uint32_t RenderTarget::get_height() const {
 	return height;
 }
 void RenderTarget::get_colorbuf(std::vector<Color24> &img) const { 
 	//Compute the correct image from the saved pixel data
 	img.resize(width * height);
-	for (size_t y = 0; y < height; ++y){
-		for (size_t x = 0; x < width; ++x){
+	for (uint32_t y = 0; y < height; ++y){
+		for (uint32_t x = 0; x < width; ++x){
 			const Pixel &p = pixels[y * width + x];
 			float weight = p.weight;
 			if (weight != 0){
@@ -152,8 +152,8 @@ bool RenderTarget::save_bmp(const std::string &file, const uint8_t *data) const 
 		return false;
 	}
 	// Write each row follwed by any necessary padding
-	size_t padding = (w * 3) % 4;
-	for (size_t r = 0; r < h; ++r){
+	uint32_t padding = (w * 3) % 4;
+	for (uint32_t r = 0; r < h; ++r){
 		if (fwrite(data + 3 * w * r, 1, 3 * w, fp) != 3 * w){
 			fclose(fp);
 			return false;
