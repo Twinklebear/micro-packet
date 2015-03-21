@@ -2,6 +2,7 @@
 #define MATERIAL_H
 
 #include "vec.h"
+#include "color.h"
 
 struct Material {
 	virtual Colorf_8 shade(const Vec3f_8 &w_o, const Vec3f_8 &w_i) const = 0;
