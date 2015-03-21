@@ -6,9 +6,25 @@
 #include <cfloat>
 #include "immintrin.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#ifndef M_1_PI
+#define M_1_PI 0.31830988618379067154
+#endif
+
 // output operator for debugging vectors
 std::ostream& operator<<(std::ostream &os, const __m256 &v);
 std::ostream& operator<<(std::ostream &os, const __m256i &v);
+
+/*
+ * Compute absolute value of values in the vector
+ * We just mask off the sign bit to set it to 0
+ */
+inline __m256 vabs(__m256 v){
+	static const auto sign_mask = _mm256_set1_ps(-0.f);
+	return _mm256_andnot_ps(sign_mask, v);
+}
 
 template<typename T>
 inline T clamp(T x, T min, T max){
@@ -95,6 +111,11 @@ struct Vec3f_8 {
 		x = _mm256_div_ps(x, len);
 		y = _mm256_div_ps(y, len);
 		z = _mm256_div_ps(z, len);
+	}
+	inline Vec3f_8 normalized(){
+		const auto len = length();
+		return Vec3f_8{_mm256_div_ps(x, len), _mm256_div_ps(y, len),
+			_mm256_div_ps(z, len)};
 	}
 	inline __m256 dot(const Vec3f_8 &vb) const {
 		const auto a = _mm256_mul_ps(x, vb.x);

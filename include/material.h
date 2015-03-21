@@ -7,12 +7,12 @@ struct Material {
 	virtual Colorf_8 shade(const Vec3f_8 &w_o, const Vec3f_8 &w_i) const = 0;
 };
 
-struct FlatMaterial : Material {
+struct LambertianMaterial : Material {
 	Colorf color;
 
-	inline FlatMaterial(Colorf color) : color(color){}
+	inline LambertianMaterial(Colorf color) : color(color){}
 	inline Colorf_8 shade(const Vec3f_8&, const Vec3f_8&) const {
-		return Colorf_8{color};
+		return Colorf_8{color * M_1_PI};
 	}
 };
 

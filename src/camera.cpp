@@ -1,5 +1,5 @@
-#define _USE_MATH_DEFINES
 #include <cmath>
+#include "vec.h"
 #include "camera.h"
 
 PerspectiveCamera::PerspectiveCamera(Vec3f pos, Vec3f center, Vec3f up, float fovy, float aspect)

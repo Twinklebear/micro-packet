@@ -1,6 +1,6 @@
 #include "plane.h"
 
-Plane::Plane(Vec3f pos, Vec3f normal, int material_id) : pos(pos), normal(normal), material_id(material_id){}
+Plane::Plane(Vec3f pos, Vec3f normal, int material_id) : pos(pos), normal(normal.normalized()), material_id(material_id){}
 __m256 Plane::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	const auto vpos = Vec3f_8{pos};
 	const auto vnorm = Vec3f_8{normal};

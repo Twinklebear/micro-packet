@@ -36,6 +36,7 @@ __m256 Sphere::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	dg.normal.x = _mm256_blendv_ps(dg.normal.x, normal.x, hits);
 	dg.normal.y = _mm256_blendv_ps(dg.normal.y, normal.y, hits);
 	dg.normal.z = _mm256_blendv_ps(dg.normal.z, normal.z, hits);
+	dg.normal.normalize();
 	// Is there some cleaner way to do this (including without the type punning?) and a blendv_epi32 instruction?
 	dg.material_id = _mm256_blendv_epi8(dg.material_id, _mm256_set1_epi32(material_id), *(__m256i*)&hits);
 	return hits;

@@ -25,7 +25,6 @@ struct Color24 {
 		}
 	}
 };
-#pragma pack(pop)
 
 /*
  * Struct storing a single RGB floating point color
@@ -156,22 +155,20 @@ inline Colorf_8 operator*(const Colorf_8 &a, const Colorf_8 &b){
 	return Colorf_8{_mm256_mul_ps(a.r, b.r), _mm256_mul_ps(a.g, b.g),
 		_mm256_mul_ps(a.b, b.b)};
 }
-inline Colorf_8 operator*(const Colorf_8 &a, float s){
-	const auto vs = _mm256_set1_ps(s);
-	return Colorf_8{_mm256_mul_ps(a.r, vs), _mm256_mul_ps(a.g, vs),
-		_mm256_mul_ps(a.b, vs)};
+inline Colorf_8 operator*(const Colorf_8 &a, __m256 s){
+	return Colorf_8{_mm256_mul_ps(a.r, s), _mm256_mul_ps(a.g, s),
+		_mm256_mul_ps(a.b, s)};
 }
-inline Colorf_8 operator*(float s, const Colorf_8 &a){
-	const auto vs = _mm256_set1_ps(s);
-	return Colorf_8{_mm256_mul_ps(a.r, vs), _mm256_mul_ps(a.g, vs),
-		_mm256_mul_ps(a.b, vs)};
+inline Colorf_8 operator*(__m256 s, const Colorf_8 &a){
+	return Colorf_8{_mm256_mul_ps(a.r, s), _mm256_mul_ps(a.g, s),
+		_mm256_mul_ps(a.b, s)};
 }
 inline Colorf_8 operator/(const Colorf_8 &a, const Colorf_8 &b){
 	return Colorf_8{_mm256_div_ps(a.r, b.r), _mm256_div_ps(a.g, b.g),
 		_mm256_div_ps(a.b, b.b)};
 }
-inline Colorf_8 operator/(const Colorf_8 &c, float s){
-	const auto vs = _mm256_rcp_ps(_mm256_set1_ps(s));
+inline Colorf_8 operator/(const Colorf_8 &c, __m256 s){
+	const auto vs = _mm256_rcp_ps(s);
 	return Colorf_8{_mm256_mul_ps(c.r, vs), _mm256_mul_ps(c.g, vs),
 		_mm256_mul_ps(c.b, vs)};
 }
