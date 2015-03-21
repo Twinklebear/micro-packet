@@ -12,6 +12,18 @@ std::ostream& operator<<(std::ostream &os, const __m256 &v){
 	os << " }";
 	return os;
 }
+std::ostream& operator<<(std::ostream &os, const __m256i &v){
+	int *f = (int*)&v;
+	os << "{ ";
+	for (int i = 0; i < 8; ++i){
+		os << f[i];
+		if (i < 7){
+			os << ", ";
+		}
+	}
+	os << " }";
+	return os;
+}
 
 __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t0, __m256 &t1){
 	auto discrim = _mm256_sub_ps(_mm256_mul_ps(b, b),

@@ -1,7 +1,7 @@
 #include "sphere.h"
 
-Sphere::Sphere(Vec3f pos, float radius) : pos(pos), radius(radius){}
-__m256 Sphere::intersect(Ray8 &ray) const {
+Sphere::Sphere(Vec3f pos, float radius, int material_id) : pos(pos), radius(radius), material_id(material_id){}
+__m256 Sphere::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	const auto center = Vec3f_8{pos};
 	const auto d = center - ray.o;
 	const auto a = ray.d.length_sqr();
@@ -27,6 +27,17 @@ __m256 Sphere::intersect(Ray8 &ray) const {
 	}
 	// Update t values for rays that did hit
 	ray.t_max = _mm256_blendv_ps(ray.t_max, t0, hits);
+
+	const auto point = ray.at(ray.t_max);
+	dg.point.x = _mm256_blendv_ps(dg.point.x, point.x, hits);
+	dg.point.y = _mm256_blendv_ps(dg.point.y, point.y, hits);
+	dg.point.z = _mm256_blendv_ps(dg.point.z, point.z, hits);
+	const auto normal = point - center;
+	dg.normal.x = _mm256_blendv_ps(dg.normal.x, normal.x, hits);
+	dg.normal.y = _mm256_blendv_ps(dg.normal.y, normal.y, hits);
+	dg.normal.z = _mm256_blendv_ps(dg.normal.z, normal.z, hits);
+	// Is there some cleaner way to do this (including without the type punning?) and a blendv_epi32 instruction?
+	dg.material_id = _mm256_blendv_epi8(dg.material_id, _mm256_set1_epi32(material_id), *(__m256i*)&hits);
 	return hits;
 }
 

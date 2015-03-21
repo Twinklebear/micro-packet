@@ -9,9 +9,10 @@
  */
 struct Plane : Geometry {
 	Vec3f pos, normal;
+	int material_id;
 
-	Plane(Vec3f pos, Vec3f normal);
-	__m256 intersect(Ray8 &ray) const override;
+	Plane(Vec3f pos, Vec3f normal, int material_id);
+	__m256 intersect(Ray8 &ray, DiffGeom8 &dg) const override;
 };
 
 #endif

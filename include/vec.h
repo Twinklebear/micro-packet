@@ -8,6 +8,7 @@
 
 // output operator for debugging vectors
 std::ostream& operator<<(std::ostream &os, const __m256 &v);
+std::ostream& operator<<(std::ostream &os, const __m256i &v);
 
 template<typename T>
 inline T clamp(T x, T min, T max){
@@ -109,6 +110,11 @@ inline Vec3f_8 operator-(const Vec3f_8 &a, const Vec3f_8 &b){
 	return Vec3f_8{_mm256_sub_ps(a.x, b.x), _mm256_sub_ps(a.y, b.y),
 		_mm256_sub_ps(a.z, b.z)};
 }
+inline Vec3f_8 operator-(const Vec3f_8 &a){
+	const auto neg = _mm256_set1_ps(-1);
+	return Vec3f_8{_mm256_mul_ps(a.x, neg), _mm256_mul_ps(a.y, neg),
+		_mm256_mul_ps(a.z, neg)};
+}
 // Scale all components of the vector
 inline Vec3f_8 operator*(__m256 s, const Vec3f_8 &v){
 	return Vec3f_8{_mm256_mul_ps(s, v.x), _mm256_mul_ps(s, v.y), _mm256_mul_ps(s, v.z)};
@@ -148,6 +154,9 @@ struct Ray8 {
 	Ray8(Vec3f_8 o = Vec3f_8{}, Vec3f_8 d = Vec3f_8{}, float t_min = 0, float t_max = INFINITY)
 		: o(o), d(d), t_min(_mm256_set1_ps(t_min)), t_max(_mm256_set1_ps(t_max))
 	{}
+	Vec3f_8 at(__m256 t) const {
+		return o + t * d;
+	}
 };
 inline std::ostream& operator<<(std::ostream &os, const Ray8 &r){
 	os << "Ray8:\no = " << r.o
