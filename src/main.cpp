@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <memory>
 #include "geometry.h"
@@ -53,8 +54,15 @@ int main(int, char**){
 		// If we hit something, shade it
 		if (_mm256_movemask_ps(hits) != 0){
 			auto color = Colorf_8{0};
-			// This is pretty ugly. TODO: Better approach to shading??
-			for (uint32_t i = 0; i < scene.materials.size(); ++i){
+			// How does ISPC find the unique values for its foreach_unique loop? Would like to do that
+			// if it will be nicer than this
+			std::array<int32_t, 8> mat_ids;
+			_mm256_storeu_si256((__m256i*)mat_ids.data(), dg.material_id);
+			std::unique(std::begin(mat_ids), std::end(mat_ids));
+			for (const auto &i : mat_ids){
+				if (i == -1){
+					continue;
+				}
 				// Is there a better way to just get the bits of one register casted to another?
 				// it seems like the or operations don't let you mix either
 				const auto use_mat = _mm256_cmpeq_epi32(dg.material_id, _mm256_set1_epi32(i));
