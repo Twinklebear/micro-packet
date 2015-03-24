@@ -7,6 +7,7 @@ __m256 Plane::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	const auto t = _mm256_div_ps((vpos - ray.o).dot(vnorm), ray.d.dot(vnorm));
 	auto hits = _mm256_and_ps(_mm256_cmp_ps(t, ray.t_min, _CMP_GT_OQ),
 			_mm256_cmp_ps(t, ray.t_max, _CMP_LT_OQ));
+	hits = _mm256_and_ps(hits, ray.active);
 	// Check if all rays miss the sphere
 	if (_mm256_movemask_ps(hits) == 0){
 		return hits;

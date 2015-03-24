@@ -21,6 +21,7 @@ __m256 Sphere::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	auto in_range = _mm256_and_ps(_mm256_cmp_ps(t0, ray.t_min, _CMP_GT_OQ),
 			_mm256_cmp_ps(t0, ray.t_max, _CMP_LT_OQ));
 	hits = _mm256_and_ps(hits, in_range);
+	hits = _mm256_and_ps(hits, ray.active);
 	// Check if all rays miss the sphere
 	if (_mm256_movemask_ps(hits) == 0){
 		return hits;

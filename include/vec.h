@@ -171,9 +171,11 @@ inline std::ostream& operator<<(std::ostream &os, const Vec2f_8 &v){
 struct Ray8 {
 	Vec3f_8 o, d;
 	__m256 t_min, t_max;
+	__m256 active;
 
-	Ray8(Vec3f_8 o = Vec3f_8{}, Vec3f_8 d = Vec3f_8{}, float t_min = 0, float t_max = INFINITY)
-		: o(o), d(d), t_min(_mm256_set1_ps(t_min)), t_max(_mm256_set1_ps(t_max))
+	Ray8(Vec3f_8 o = Vec3f_8{}, Vec3f_8 d = Vec3f_8{}, float t_min_ = 0, float t_max_ = INFINITY)
+		: o(o), d(d), t_min(_mm256_set1_ps(t_min_)), t_max(_mm256_set1_ps(t_max_)),
+		active(_mm256_cmp_ps(t_min, t_max, _CMP_TRUE_US))
 	{}
 	Vec3f_8 at(__m256 t) const {
 		return o + t * d;
@@ -183,7 +185,9 @@ inline std::ostream& operator<<(std::ostream &os, const Ray8 &r){
 	os << "Ray8:\no = " << r.o
 		<< "\nd = " << r.d
 		<< "\nt_max = " << r.t_max
-		<< "\nt_min = " << r.t_min;
+		<< "\nt_min = " << r.t_min
+		<< "\nactive = " << r.active
+		<< std::endl;
 	return os;
 }
 

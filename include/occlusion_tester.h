@@ -18,7 +18,7 @@ struct OcclusionTester {
 	 */
 	inline __m256 occluded(const Scene &scene){
 		DiffGeom8 dg;
-		return scene.intersect(rays, dg);
+		return _mm256_and_ps(scene.intersect(rays, dg), rays.active);
 	}
 };
 

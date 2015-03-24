@@ -73,8 +73,11 @@ int main(int, char**){
 				if (_mm256_movemask_ps(shade_mask) != 0){
 					const auto w_o = -packet.d;
 					Vec3f_8 w_i{0};
+					// Setup occlusion tester and set active ray mask to just be those with
+					// corresponding to tests from hits with the material id being shaded
 					OcclusionTester occlusion;
 					const auto li = scene.light.sample(dg.point, w_i, occlusion);
+					occlusion.rays.active = shade_mask;
 					// We just need to flip the sign bit to change occluded mask to unoccluded mask since
 					// only the sign bit is used by movemask and blendv
 					auto unoccluded = _mm256_xor_ps(occlusion.occluded(scene), _mm256_set1_ps(-0.f));
