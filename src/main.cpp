@@ -38,14 +38,15 @@ int main(int, char**){
 	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
 
 	const uint32_t block_dim = 4;
+	const uint32_t px_per_block = block_dim * block_dim;
 	auto block_queue = BlockQueue{block_dim, width, height};
 	for (auto block = block_queue.next(); block != block_queue.end(); block = block_queue.next()){
-		std::array<float, 16> pixel_x, pixel_y;
+		std::array<float, px_per_block> pixel_x, pixel_y;
 		for (int i = 0; i < block_dim * block_dim; ++i){
 			pixel_x[i] = 0.5f + i % block_dim + block.first;
 			pixel_y[i] = 0.5f + i / block_dim + block.second;
 		}
-		for (int i = 0; i < 2; ++i){
+		for (int i = 0; i < px_per_block / 8; ++i){
 			const auto samples = Vec2f_8{_mm256_loadu_ps(pixel_x.data() + 8 * i),
 				_mm256_loadu_ps(pixel_y.data() + 8 * i)};
 			Ray8 packet;
