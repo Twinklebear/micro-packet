@@ -123,6 +123,11 @@ struct Vec3f_8 {
 		const auto c = _mm256_mul_ps(z, vb.z);
 		return _mm256_add_ps(a, _mm256_add_ps(b, c));
 	}
+	inline Vec3f_8 cross(const Vec3f_8 &v) const {
+		return Vec3f_8{_mm256_sub_ps(_mm256_mul_ps(y, v.z), _mm256_mul_ps(z, v.y)),
+			_mm256_sub_ps(_mm256_mul_ps(z, v.x), _mm256_mul_ps(x, v.z)),
+			_mm256_sub_ps(_mm256_mul_ps(x, v.y), _mm256_mul_ps(y, v.z))};
+	}
 };
 inline Vec3f_8 operator+(const Vec3f_8 &a, const Vec3f_8 &b){
 	return Vec3f_8{_mm256_add_ps(a.x, b.x), _mm256_add_ps(a.y, b.y), _mm256_add_ps(a.z, b.z)};
