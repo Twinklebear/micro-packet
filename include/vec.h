@@ -96,10 +96,9 @@ struct Vec3f_8 {
 	inline Vec3f_8(__m256 x, __m256 y, __m256 z) : x(x), y(y), z(z){}
 	// Compute length^2 of all 8 vectors
 	inline __m256 length_sqr() const {
-		const auto x_sqr = _mm256_mul_ps(x, x);
-		const auto y_sqr = _mm256_mul_ps(y, y);
-		const auto z_sqr = _mm256_mul_ps(z, z);
-		return _mm256_add_ps(x_sqr, _mm256_add_ps(y_sqr, z_sqr));
+		const auto a = _mm256_mul_ps(x, x);
+		const auto b = _mm256_fmadd_ps(y, y, a);
+		return _mm256_fmadd_ps(z, z, b);
 	}
 	// Compute length of all 8 vectors
 	inline __m256 length() const {
@@ -107,26 +106,25 @@ struct Vec3f_8 {
 	}
 	// Normalize all 8 vectors
 	inline void normalize(){
-		const auto len = length();
-		x = _mm256_div_ps(x, len);
-		y = _mm256_div_ps(y, len);
-		z = _mm256_div_ps(z, len);
+		const auto len = _mm256_rcp_ps(length());
+		x = _mm256_mul_ps(x, len);
+		y = _mm256_mul_ps(y, len);
+		z = _mm256_mul_ps(z, len);
 	}
 	inline Vec3f_8 normalized(){
-		const auto len = length();
-		return Vec3f_8{_mm256_div_ps(x, len), _mm256_div_ps(y, len),
-			_mm256_div_ps(z, len)};
+		const auto len = _mm256_rcp_ps(length());
+		return Vec3f_8{_mm256_mul_ps(x, len), _mm256_mul_ps(y, len),
+			_mm256_mul_ps(z, len)};
 	}
 	inline __m256 dot(const Vec3f_8 &vb) const {
 		const auto a = _mm256_mul_ps(x, vb.x);
-		const auto b = _mm256_mul_ps(y, vb.y);
-		const auto c = _mm256_mul_ps(z, vb.z);
-		return _mm256_add_ps(a, _mm256_add_ps(b, c));
+		const auto b = _mm256_fmadd_ps(y, vb.y, a);
+		return _mm256_fmadd_ps(z, vb.z, b);
 	}
 	inline Vec3f_8 cross(const Vec3f_8 &v) const {
-		return Vec3f_8{_mm256_sub_ps(_mm256_mul_ps(y, v.z), _mm256_mul_ps(z, v.y)),
-			_mm256_sub_ps(_mm256_mul_ps(z, v.x), _mm256_mul_ps(x, v.z)),
-			_mm256_sub_ps(_mm256_mul_ps(x, v.y), _mm256_mul_ps(y, v.z))};
+		return Vec3f_8{_mm256_fmsub_ps(y, v.z, _mm256_mul_ps(z, v.y)),
+			_mm256_fmsub_ps(z, v.x, _mm256_mul_ps(x, v.z)),
+			_mm256_fmsub_ps(x, v.y, _mm256_mul_ps(y, v.z))};
 	}
 };
 inline Vec3f_8 operator+(const Vec3f_8 &a, const Vec3f_8 &b){
@@ -178,9 +176,14 @@ struct Ray8 {
 	__m256 t_min, t_max;
 	__m256 active;
 
+	/*
+	 * Create a new group of active rays
+	 * Note: only the sign bit of the active mask will be set, as this is all that's used by blendv
+	 * and movemask
+	 */
 	Ray8(Vec3f_8 o = Vec3f_8{}, Vec3f_8 d = Vec3f_8{}, float t_min_ = 0, float t_max_ = INFINITY)
 		: o(o), d(d), t_min(_mm256_set1_ps(t_min_)), t_max(_mm256_set1_ps(t_max_)),
-		active(_mm256_cmp_ps(t_min, t_max, _CMP_TRUE_US))
+		active(_mm256_set1_ps(-0.f))
 	{}
 	Vec3f_8 at(__m256 t) const {
 		return o + t * d;

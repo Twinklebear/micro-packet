@@ -105,7 +105,7 @@ inline __m256 convert_srgb(__m256 x){
 	// We need to compute both branches for the sRGB conversion then pick
 	// the right one based on the mask
 	const auto y = _mm256_mul_ps(x, _mm256_set1_ps(12.92f));
-	const auto z = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(1.055f), vpow(x, b)), a);
+	const auto z = _mm256_fmsub_ps(_mm256_set1_ps(1.055f), vpow(x, b), a);
 	return _mm256_blendv_ps(y, z, mask);
 }
 

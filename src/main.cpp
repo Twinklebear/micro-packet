@@ -69,10 +69,8 @@ int main(int, char**){
 					if (i == -1){
 						continue;
 					}
-					// Is there a better way to just get the bits of one register casted to another?
-					// it seems like the or operations don't let you mix either
 					const auto use_mat = _mm256_cmpeq_epi32(dg.material_id, _mm256_set1_epi32(i));
-					auto shade_mask = *(__m256*)&use_mat;
+					auto shade_mask = _mm256_castsi256_ps(use_mat);
 					if (_mm256_movemask_ps(shade_mask) != 0){
 						const auto w_o = -packet.d;
 						Vec3f_8 w_i{0};

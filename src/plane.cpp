@@ -21,8 +21,9 @@ __m256 Plane::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	dg.normal.x = _mm256_blendv_ps(dg.normal.x, vnorm.x, hits);
 	dg.normal.y = _mm256_blendv_ps(dg.normal.y, vnorm.y, hits);
 	dg.normal.z = _mm256_blendv_ps(dg.normal.z, vnorm.z, hits);
-	// Is there some cleaner way to do this (including without the type punning?) and a blendv_epi32 instruction?
-	dg.material_id = _mm256_blendv_epi8(dg.material_id, _mm256_set1_epi32(material_id), *(__m256i*)&hits);
+	// There's no blendv_epi32 in AVX/AVX2 so we have to resort to some hacky casting
+	dg.material_id = _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(dg.material_id),
+			_mm256_castsi256_ps(_mm256_set1_epi32(material_id)), hits));
 	return hits;
 }
 

@@ -26,8 +26,7 @@ std::ostream& operator<<(std::ostream &os, const __m256i &v){
 }
 
 __m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t0, __m256 &t1){
-	auto discrim = _mm256_sub_ps(_mm256_mul_ps(b, b),
-			_mm256_mul_ps(_mm256_mul_ps(a, c), _mm256_set1_ps(4.f)));
+	auto discrim = _mm256_fmsub_ps(b, b, _mm256_mul_ps(_mm256_mul_ps(a, c), _mm256_set1_ps(4.f)));
 	auto solved = _mm256_cmp_ps(discrim, _mm256_set1_ps(0), _CMP_GT_OQ);
 	// Test for the case where none of the equations can be solved (eg. none hit)
 	if ((_mm256_movemask_ps(solved) & 255) == 0){
