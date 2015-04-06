@@ -72,8 +72,8 @@ void RenderTarget::write_samples(const Vec2f_8 &p, const Colorf_8 &c, __m256 mas
 	}
 }
 bool RenderTarget::save_image(const std::string &file) const {
-	//Compute the correct image from the saved pixel data and write
-	//it to the desired file
+	// Compute the correct image from the saved pixel data and write
+	// it to the desired file
 	std::string file_ext = file.substr(file.rfind(".") + 1);
 	if (file_ext == "ppm"){
 		std::vector<Color24> img(width * height);
@@ -107,7 +107,7 @@ uint32_t RenderTarget::get_height() const {
 	return height;
 }
 void RenderTarget::get_colorbuf(std::vector<Color24> &img) const { 
-	//Compute the correct image from the saved pixel data
+	// Compute the correct image from the saved pixel data
 	img.resize(width * height);
 	for (uint32_t y = 0; y < height; ++y){
 		for (uint32_t x = 0; x < width; ++x){
