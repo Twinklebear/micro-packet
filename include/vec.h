@@ -1,6 +1,7 @@
 #ifndef VEC_H
 #define VEC_H
 
+#include <cassert>
 #include <cmath>
 #include <ostream>
 #include <cfloat>
@@ -125,6 +126,26 @@ struct Vec3f_8 {
 		return Vec3f_8{_mm256_fmsub_ps(y, v.z, _mm256_mul_ps(z, v.y)),
 			_mm256_fmsub_ps(z, v.x, _mm256_mul_ps(x, v.z)),
 			_mm256_fmsub_ps(x, v.y, _mm256_mul_ps(y, v.z))};
+	}
+	inline __m256& operator[](size_t i){
+		switch (i){
+			case 0: return x;
+			case 1: return y;
+			case 2: return z;
+			default:
+				assert(false);
+				return z;
+		}
+	}
+	inline const __m256& operator[](size_t i) const {
+		switch (i){
+			case 0: return x;
+			case 1: return y;
+			case 2: return z;
+			default:
+				assert(false);
+				return z;
+		}
 	}
 };
 inline Vec3f_8 operator+(const Vec3f_8 &a, const Vec3f_8 &b){
