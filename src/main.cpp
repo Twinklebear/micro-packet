@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include "immintrin.h"
 #include "vec.h"
+#include "mat3.h"
 #include "color.h"
 #include "render_target.h"
 #include "camera.h"
