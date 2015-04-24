@@ -14,7 +14,9 @@ struct PerspectiveCamera {
 
 	PerspectiveCamera(Vec3f pos, Vec3f center, Vec3f up, float fovy, float aspect);
 	/*
-	 * Generate a ray packet sampling the 8 screen positions passed
+	 * Generate a ray packet sampling the 8 screen positions passed,
+	 * screen positions should be normalized to be between [0, 1] in
+	 * each dimension
 	 */
 	void generate_rays(Ray8 &rays, const Vec2f_8 &samples) const;
 };

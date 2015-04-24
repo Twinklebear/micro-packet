@@ -112,10 +112,9 @@ void RenderTarget::get_colorbuf(std::vector<Color24> &img) const {
 	for (uint32_t y = 0; y < height; ++y){
 		for (uint32_t x = 0; x < width; ++x){
 			const Pixel &p = pixels[y * width + x];
-			float weight = p.weight;
-			if (weight != 0){
+			if (p.weight != 0){
 				Colorf c{p.r, p.g, p.b};
-				c /= weight;
+				c /= p.weight;
 				c.normalize();
 				img[y * width + x] = c.to_sRGB();
 			}

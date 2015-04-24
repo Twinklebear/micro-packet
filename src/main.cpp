@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <random>
 #include <vector>
 #include <memory>
 #include "geometry.h"
@@ -16,6 +17,7 @@
 #include "light.h"
 #include "occlusion_tester.h"
 #include "block_queue.h"
+#include "ld_sampler.h"
 #include "scene.h"
 
 int main(int, char**){
@@ -33,24 +35,22 @@ int main(int, char**){
 		PointLight{Vec3f{1, 1, -2}, Colorf{50}}
 	};
 
-	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
+	const auto camera = PerspectiveCamera{Vec3f{0, 0, -2}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
 		60.f, static_cast<float>(width) / height};
 	auto target = RenderTarget{width, height};
 	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
 
+	// TODO: Proper seeding
+	std::mt19937 rng;
 	const uint32_t block_dim = 4;
-	const uint32_t px_per_block = block_dim * block_dim;
 	auto block_queue = BlockQueue{block_dim, width, height};
+	auto sampler = LDSampler{8, block_dim};
 	for (auto block = block_queue.next(); block != block_queue.end(); block = block_queue.next()){
-		std::array<float, px_per_block> pixel_x, pixel_y;
-		for (int i = 0; i < block_dim * block_dim; ++i){
-			pixel_x[i] = 0.5f + i % block_dim + block.first;
-			pixel_y[i] = 0.5f + i / block_dim + block.second;
-		}
-		for (int i = 0; i < px_per_block / 8; ++i){
-			const auto samples = Vec2f_8{_mm256_loadu_ps(pixel_x.data() + 8 * i),
-				_mm256_loadu_ps(pixel_y.data() + 8 * i)};
+		sampler.select_block(block);
+		while (sampler.has_samples()){
+			auto samples = Vec2f_8{0, 0};
 			Ray8 packet;
+			packet.active = sampler.sample(rng, samples);
 			camera.generate_rays(packet, samples / img_dim);
 
 			DiffGeom8 dg;
