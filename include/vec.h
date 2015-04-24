@@ -14,6 +14,15 @@
 #define M_1_PI 0.31830988618379067154
 #endif
 
+// Setup cross-platform alignment macro
+#if defined(_MSC_VER)
+#define CACHE_ALIGN __declspec(align(32))
+#elif defined(__GNUC__)
+#define CACHE_ALIGN __attribute__((__aligned__(32)))
+#else
+#error "No known compiler alignment specifier"
+#endif
+
 // output operator for debugging vectors
 std::ostream& operator<<(std::ostream &os, const __m256 &v);
 std::ostream& operator<<(std::ostream &os, const __m256i &v);
@@ -177,7 +186,15 @@ struct Vec2f_8 {
 
 	inline Vec2f_8(float x = 0, float y = 0) : x(_mm256_set1_ps(x)), y(_mm256_set1_ps(y)){}
 	inline Vec2f_8(__m256 x, __m256 y) : x(x), y(y){}
+	inline Vec2f_8& operator+=(const Vec2f_8 &a){
+		x = _mm256_add_ps(x, a.x);
+		y = _mm256_add_ps(y, a.y);
+		return *this;
+	}
 };
+inline Vec2f_8 operator+(const Vec2f_8 &a, const Vec2f_8 &b){
+	return Vec2f_8{_mm256_add_ps(a.x, b.x), _mm256_add_ps(a.y, b.y)};
+}
 inline Vec2f_8 operator-(const Vec2f_8 &a, const Vec2f_8 &b){
 	return Vec2f_8{_mm256_sub_ps(a.x, b.x), _mm256_sub_ps(a.y, b.y)};
 }
