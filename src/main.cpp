@@ -26,7 +26,7 @@ int main(int, char**){
 	const auto scene = Scene{
 		{
 			std::make_shared<Sphere>(Vec3f{0}, 0.5f, 0),
-			std::make_shared<Plane>(Vec3f{0, -0.5, 0}, Vec3f{0, 1, 0}, 1)
+			std::make_shared<Plane>(Vec3f{0, -0.5f, 0.5f}, Vec3f{0, 1, 0}, 1)
 		},
 		{
 			std::make_shared<LambertianMaterial>(Colorf{1, 0, 0}),
@@ -55,9 +55,9 @@ int main(int, char**){
 
 			DiffGeom8 dg;
 			auto hits = scene.intersect(packet, dg);
-			// If we hit something, shade it
+			// If we hit something, shade it, otherwise use the background color (black)
+			auto color = Colorf_8{0};
 			if (_mm256_movemask_ps(hits) != 0){
-				auto color = Colorf_8{0};
 				// How does ISPC find the unique values for its foreach_unique loop? Would like to do that
 				// if it will be nicer than this
 				std::array<int32_t, 8> mat_ids;
@@ -93,8 +93,8 @@ int main(int, char**){
 						}
 					}
 				}
-				target.write_samples(samples, color, hits);
 			}
+			target.write_samples(samples, color, packet.active);
 		}
 	}
 	target.save_image("out.bmp");
