@@ -11,7 +11,7 @@
 #include "render_target.h"
 
 /*
- * Convenient wrapper for BMP header information for a 32bpp BMP
+ * Convenient wrapper for BMP header information for a 24bpp BMP
  */
 #pragma pack(1)
 struct BMPHeader {
