@@ -40,8 +40,8 @@ int main(int, char**){
 	auto target = RenderTarget{width, height};
 	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
 
-	// TODO: Proper seeding
-	std::mt19937 rng;
+	std::random_device rand_device;
+	std::mt19937 rng(rand_device());
 	const uint32_t block_dim = 8;
 	auto block_queue = BlockQueue{block_dim, width, height};
 	auto sampler = LDSampler{32, block_dim};
