@@ -42,9 +42,9 @@ int main(int, char**){
 
 	// TODO: Proper seeding
 	std::mt19937 rng;
-	const uint32_t block_dim = 4;
+	const uint32_t block_dim = 8;
 	auto block_queue = BlockQueue{block_dim, width, height};
-	auto sampler = LDSampler{8, block_dim};
+	auto sampler = LDSampler{32, block_dim};
 	for (auto block = block_queue.next(); block != block_queue.end(); block = block_queue.next()){
 		sampler.select_block(block);
 		while (sampler.has_samples()){

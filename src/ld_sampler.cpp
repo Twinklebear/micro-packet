@@ -13,6 +13,7 @@ LDSampler::LDSampler(uint32_t spp, uint32_t block_dim) : spp(spp), block_dim(blo
 void LDSampler::select_block(const std::pair<uint32_t, uint32_t> &b){
 	start = b;
 	current = b;
+	samples_taken = 0;
 }
 bool LDSampler::has_samples() const {
 	return current.second != start.second + block_dim;
@@ -23,26 +24,39 @@ __m256 LDSampler::sample(std::mt19937 &rng, Vec2f_8 &samples){
 	}
 	// Cases to handle:
 	// - Our samples per pixel are less than 8 so we need to sample multiple pixels
+	//   TODO: Is it worth supporting this case?
 	// - Our samples per pixel are == 8 so we just take samples for one pixel
 	// - Our samples per pixel are > 8 so we need to resume sampling and track how
 	// 	 many we took in the current pixel. We may also end up spilling into another pixel
 	// 	 if the sampling rate is > 8 but not a multiple of it.
-	// TODO: The method below is hard-coded to take 8 samples per pixel
 	CACHE_ALIGN float x[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 	CACHE_ALIGN float y[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
-	sample2d(8, distrib(rng), distrib(rng), x, y);
-	std::shuffle(x, x + 8, rng);
-	std::shuffle(y, y + 8, rng);
+
+	// Take at most 8 samples per sampling pass since that's how many we can
+	// fit into a packet
+	int n = spp - samples_taken;
+	if (n > 8){
+		n = 8;
+	}
+	sample2d(n, distrib(rng), distrib(rng), x, y, samples_taken);
+	std::shuffle(x, x + n, rng);
+	std::shuffle(y, y + n, rng);
 	samples.x = _mm256_load_ps(x);
 	samples.y = _mm256_load_ps(y);
 	// We use -1 to signal that there is no sample to be taken for the lane, so
 	// compute mask of those samples which shouldn't be used
 	const auto active = _mm256_cmp_ps(samples.x, _mm256_set1_ps(-0.5f), _CMP_GT_OQ);
 	samples += Vec2f_8{static_cast<float>(current.first), static_cast<float>(current.second)};
-	++current.first;
-	if (current.first == start.first + block_dim){
-		current.first = start.first;
-		++current.second;
+
+	samples_taken += n;
+	// We're done sampling this pixel, move to the next one
+	if (samples_taken >= spp){
+		samples_taken = 0;
+		++current.first;
+		if (current.first == start.first + block_dim){
+			current.first = start.first;
+			++current.second;
+		}
 	}
 	return active;
 }

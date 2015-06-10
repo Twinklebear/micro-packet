@@ -35,7 +35,8 @@ public:
 	 * Compute up to 8 pixel samples in the block being sampled and return them
 	 * Note: fewer than 8 samples may be generated if the sampler runs out of
 	 * samples to take over the block, in which case some lanes will be masked
-	 * off in the active mask returned
+	 * off in the active mask returned and the masked off components will
+	 * have (-1, -1) as the pixel sample position
 	 */
 	__m256 sample(std::mt19937 &rng, Vec2f_8 &samples);
 };
