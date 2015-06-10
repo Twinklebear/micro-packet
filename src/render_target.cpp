@@ -61,8 +61,8 @@ void RenderTarget::write_samples(const Vec2f_8 &p, const Colorf_8 &c, __m256 mas
 	const auto write_mask = _mm256_movemask_ps(mask);
 	for (int i = 0, mask = 1; i < 8; ++i, mask <<= 1){
 		if (write_mask & mask){
-			int ix = clamp(static_cast<int>(img_x[i]), 0, static_cast<int>(width));
-			int iy = clamp(static_cast<int>(img_y[i]), 0, static_cast<int>(height));
+			int ix = clamp(static_cast<int>(img_x[i]), 0, static_cast<int>(width) - 1);
+			int iy = clamp(static_cast<int>(img_y[i]), 0, static_cast<int>(height) - 1);
 			Pixel &p = pixels[iy * width + ix];
 			p.r += cr[i];
 			p.g += cg[i];
