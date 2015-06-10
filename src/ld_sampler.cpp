@@ -1,3 +1,4 @@
+#include <iostream>
 #include <algorithm>
 #include "vec.h"
 #include "ld_sampler.h"
@@ -6,10 +7,26 @@ static void sample2d(int n, uint32_t x, uint32_t y, float *s0, float *s1, int of
 static void sample02(uint32_t n, const uint32_t x, const uint32_t y, float *s0, float *s1);
 static float van_der_corput(uint32_t n, uint32_t scramble);
 static float sobol2(uint32_t n, uint32_t scramble);
+/*
+ * Round x up to the nearest power of 2
+ * Based off Stephan Brumme's method
+ * http://bits.stephan-brumme.com/roundUpToNextPowerOfTwo.html
+ */
+static inline uint32_t round_up_pow2(uint32_t x);
 
 // We set start's y coord so that we'll report we don't have any samples until a block is selected
-LDSampler::LDSampler(uint32_t spp, uint32_t block_dim) : spp(spp), block_dim(block_dim),
-	samples_taken(0), start({0, block_dim}), current({0, 0}){}
+LDSampler::LDSampler(uint32_t sp, uint32_t block_dim) : spp(std::max(round_up_pow2(sp), uint32_t{8})),
+	block_dim(block_dim), samples_taken(0), start({0, block_dim}), current({0, 0})
+{
+	if (sp < 8){
+		std::cout << "Warning: LDSampler only supports taking 8 or more samples per pixel,"
+			<< " will take " << spp << "spp\n";
+	}
+	else if (sp != spp){
+		std::cout << "Warning: LDSampler only takes power of 2 samples per pixel, rounded up to"
+			<< " take " << spp << "spp\n";
+	}
+}
 void LDSampler::select_block(const std::pair<uint32_t, uint32_t> &b){
 	start = b;
 	current = b;
@@ -22,13 +39,6 @@ __m256 LDSampler::sample(std::mt19937 &rng, Vec2f_8 &samples){
 	if (!has_samples()){
 		return _mm256_set1_ps(0.f);
 	}
-	// Cases to handle:
-	// - Our samples per pixel are less than 8 so we need to sample multiple pixels
-	//   TODO: Is it worth supporting this case?
-	// - Our samples per pixel are == 8 so we just take samples for one pixel
-	// - Our samples per pixel are > 8 so we need to resume sampling and track how
-	// 	 many we took in the current pixel. We may also end up spilling into another pixel
-	// 	 if the sampling rate is > 8 but not a multiple of it.
 	CACHE_ALIGN float x[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 	CACHE_ALIGN float y[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
@@ -85,5 +95,14 @@ float sobol2(uint32_t n, uint32_t scramble){
 		}
 	}
 	return ((scramble >> 8) & 0xffffff) / float{1 << 24};
+}
+inline uint32_t round_up_pow2(uint32_t x){
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	return x + 1;
 }
 
