@@ -20,31 +20,11 @@
 #include "ld_sampler.h"
 #include "scene.h"
 
-int main(int, char**){
-	const uint32_t width = 800;
-	const uint32_t height = 600;
-	const auto scene = Scene{
-		{
-			std::make_shared<Sphere>(Vec3f{0}, 0.5f, 0),
-			std::make_shared<Plane>(Vec3f{0, -0.5f, 0.5f}, Vec3f{0, 1, 0}, 1)
-		},
-		{
-			std::make_shared<LambertianMaterial>(Colorf{1, 0, 0}),
-			std::make_shared<LambertianMaterial>(Colorf{0, 0, 1})
-		},
-		PointLight{Vec3f{1, 1, -2}, Colorf{50}}
-	};
-
-	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
-		60.f, static_cast<float>(width) / height};
-	auto target = RenderTarget{width, height};
-	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
-
+void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 img_dim, RenderTarget &target,
+			BlockQueue &block_queue){
 	std::random_device rand_device;
 	std::mt19937 rng(rand_device());
-	const uint32_t block_dim = 8;
-	auto block_queue = BlockQueue{block_dim, width, height};
-	auto sampler = LDSampler{32, block_dim};
+	auto sampler = LDSampler{64, block_queue.get_block_dim()};
 	for (auto block = block_queue.next(); block != block_queue.end(); block = block_queue.next()){
 		sampler.select_block(block);
 		while (sampler.has_samples()){
@@ -98,6 +78,32 @@ int main(int, char**){
 			target.write_samples(samples, color, packet.active);
 		}
 	}
+}
+
+int main(int, char**){
+	const uint32_t width = 800;
+	const uint32_t height = 600;
+	const auto scene = Scene{
+		{
+			std::make_shared<Sphere>(Vec3f{0}, 0.5f, 0),
+			std::make_shared<Plane>(Vec3f{0, -0.5f, 0.5f}, Vec3f{0, 1, 0}, 1)
+		},
+		{
+			std::make_shared<LambertianMaterial>(Colorf{1, 0, 0}),
+			std::make_shared<LambertianMaterial>(Colorf{0, 0, 1})
+		},
+		PointLight{Vec3f{1, 1, -2}, Colorf{50}}
+	};
+
+	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
+		60.f, static_cast<float>(width) / height};
+	auto target = RenderTarget{width, height};
+	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
+	const uint32_t block_dim = 8;
+	auto block_queue = BlockQueue{block_dim, width, height};
+
+	render(scene, camera, img_dim, target, block_queue);
+
 	target.save_image("out.bmp");
 }
 
