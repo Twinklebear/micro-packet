@@ -47,11 +47,10 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 i
 				std::sort(std::begin(mat_ids), std::end(mat_ids));
 				auto id_end = std::unique(std::begin(mat_ids), std::end(mat_ids));
 				for (auto it = std::begin(mat_ids); it != id_end; ++it){
-					const auto i = *it;
-					if (i == -1){
+					if (*it == -1){
 						continue;
 					}
-					const auto use_mat = _mm256_cmpeq_epi32(dg.material_id, _mm256_set1_epi32(i));
+					const auto use_mat = _mm256_cmpeq_epi32(dg.material_id, _mm256_set1_epi32(*it));
 					auto shade_mask = _mm256_castsi256_ps(use_mat);
 					if (_mm256_movemask_ps(shade_mask) != 0){
 						const auto w_o = -packet.d;
@@ -65,7 +64,7 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 i
 						// only the sign bit is used by movemask and blendv
 						auto unoccluded = _mm256_xor_ps(occlusion.occluded(scene), _mm256_set1_ps(-0.f));
 						if (_mm256_movemask_ps(unoccluded) != 0){
-							const auto c = scene.materials[i]->shade(w_o, w_i) * li
+							const auto c = scene.materials[*it]->shade(w_o, w_i) * li
 								* _mm256_max_ps(w_i.dot(dg.normal), _mm256_set1_ps(0.f));
 							shade_mask = _mm256_and_ps(shade_mask, unoccluded);
 							color.r = _mm256_blendv_ps(color.r, c.r, shade_mask);
