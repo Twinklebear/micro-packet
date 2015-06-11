@@ -28,6 +28,7 @@ public:
 	 */
 	std::pair<uint32_t, uint32_t> next();
 	std::pair<uint32_t, uint32_t> end();
+	uint32_t get_block_dim() const;
 };
 
 #endif

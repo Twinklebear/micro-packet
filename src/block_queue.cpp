@@ -45,4 +45,7 @@ std::pair<uint32_t, uint32_t> BlockQueue::next(){
 std::pair<uint32_t, uint32_t> BlockQueue::end(){
 	return std::make_pair(-1, -1);
 }
+uint32_t BlockQueue::get_block_dim() const {
+	return block_dim;
+}
 
