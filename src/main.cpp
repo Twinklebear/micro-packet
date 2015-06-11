@@ -65,8 +65,9 @@ int main(int, char**){
 				// std::unique just removes consecutive repeated elements, so sort things first so we
 				// don't get something like -1, 0, -1 or such
 				std::sort(std::begin(mat_ids), std::end(mat_ids));
-				std::unique(std::begin(mat_ids), std::end(mat_ids));
-				for (const auto &i : mat_ids){
+				auto id_end = std::unique(std::begin(mat_ids), std::end(mat_ids));
+				for (auto it = std::begin(mat_ids); it != id_end; ++it){
+					const auto i = *it;
 					if (i == -1){
 						continue;
 					}
