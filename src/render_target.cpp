@@ -15,7 +15,7 @@
  */
 #pragma pack(1)
 struct BMPHeader {
-	std::array<uint8_t, 2> header;
+	std::array<uint8_t, 2> header = {'B', 'M'};
 	uint32_t file_size;
 	// 4 reserved bytes we don't care about
 	uint32_t dont_care = 0;
@@ -27,22 +27,13 @@ struct BMPHeader {
 	uint16_t bpp = 24;
 	uint32_t compression = 0;
 	uint32_t img_size;
-	std::array<int32_t, 2> res;
+	std::array<int32_t, 2> res = {2835, 2835};
 	uint32_t color_palette = 0;
 	uint32_t important_colors = 0;
 
 	BMPHeader(uint32_t img_size, int32_t w, int32_t h)
-		: file_size(54 + img_size), img_size(img_size)
-	{
-		// Workaround hacks to init header, dims and res because MSVC
-		// is too slow to implement C++11/14
-		header[0] = 'B';
-		header[1] = 'M';
-		dims[0] = w;
-		dims[1] = h;
-		res[0] = 2835;
-		res[1] = 2835;
-	}
+		: file_size(54 + img_size), dims({ w, h }), img_size(img_size)
+	{}
 };
 
 Pixel::Pixel() : r(0), g(0), b(0), weight(0){}
