@@ -32,7 +32,7 @@ struct BMPHeader {
 	uint32_t important_colors = 0;
 
 	BMPHeader(uint32_t img_size, int32_t w, int32_t h)
-		: file_size(54 + img_size), dims({ w, h }), img_size(img_size)
+		: file_size(54 + img_size), dims({w, h}), img_size(img_size)
 	{}
 };
 
