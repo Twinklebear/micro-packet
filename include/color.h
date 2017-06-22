@@ -87,14 +87,14 @@ bool operator!=(const Colorf &a, const Colorf &b);
 std::ostream& operator<<(std::ostream &os, const Colorf &c);
 
 // Compute sRGB values for some color channel
-inline psimd::pack<float> convert_srgb(psimd::pack<float> x){
-	const static psimd::pack<float> a(0.055f);
-	const static psimd::pack<float> b(1.f / 2.4f);
-	const auto mask = x <= 0.0031308f;
+inline psimd::pack<float> convert_srgb(psimd::pack<float> v){
+	const float a = 0.055f;
+	const float b = 1.f / 2.4f;
+	const auto mask = v <= 0.0031308f;
 	// We need to compute both branches for the sRGB conversion then pick
 	// the right one based on the mask
-	const auto y = x * 12.92f;
-	const auto x = 1.055f * psimd::pow(x, b) - a;
+	const auto y = v * 12.92f;
+	const auto z = 1.055f * psimd::pow(v, b) - a;
 	return psimd::select(mask, z, y);
 }
 
@@ -118,14 +118,18 @@ struct ColorfN {
 	 * Normalize the floating point color values to be clamped between 0-1
 	 */
 	inline void normalize(){
-		r = psimd::max(0.f, psimd::min(1.f, r));
-		g = psimd::max(0.f, psimd::min(1.f, g));
-		b = psimd::max(0.f, psimd::min(1.f, b));
+		const psimd::pack<float> zero(0.f);
+		const psimd::pack<float> one(1.f); 
+		r = psimd::max(zero, psimd::min(one, r));
+		g = psimd::max(zero, psimd::min(one, g));
+		b = psimd::max(zero, psimd::min(one, b));
 	}
 	inline ColorfN normalized() const {
-		return ColorfN{psimd::max(0.f, psimd::min(1.f, r)),
-			psimd::max(0.f, psimd::min(1.f, g));
-			psimd::max(0.f, psimd::min(1.f, b))};
+		const psimd::pack<float> zero(0.f);
+		const psimd::pack<float> one(1.f); 
+		return ColorfN(psimd::max(zero, psimd::min(one, r)),
+			psimd::max(zero, psimd::min(one, g)),
+			psimd::max(zero, psimd::min(one, b)));
 	}
 	inline psimd::pack<float>& operator[](int i) {
 		switch (i) {
@@ -145,22 +149,22 @@ struct ColorfN {
 	}
 };
 inline ColorfN operator+(const ColorfN &a, const ColorfN &b){
-	return ColorfN{a.r + b.r, a.g + b.g, a.b + b.b}
+	return ColorfN{a.r + b.r, a.g + b.g, a.b + b.b};
 }
 inline ColorfN operator-(const ColorfN &a, const ColorfN &b){
-	return ColorfN{a.r - b.r, a.g - b.g, a.b - b.b}
+	return ColorfN{a.r - b.r, a.g - b.g, a.b - b.b};
 }
 inline ColorfN operator*(const ColorfN &a, const ColorfN &b){
-	return ColorfN{a.r * b.r, a.g * b.g, a.b * b.b}
+	return ColorfN{a.r * b.r, a.g * b.g, a.b * b.b};
 }
 inline ColorfN operator*(const ColorfN &a, psimd::pack<float> s){
-	return ColorfN{a.r * s, a.g * s, a.b * s}
+	return ColorfN{a.r * s, a.g * s, a.b * s};
 }
 inline ColorfN operator*(psimd::pack<float> s, const ColorfN &a){
-	return ColorfN{a.r * s, a.g * s, a.b * s}
+	return ColorfN{a.r * s, a.g * s, a.b * s};
 }
 inline ColorfN operator/(const ColorfN &a, const ColorfN &b){
-	return ColorfN{a.r / b.r, a.g / b.g, a.b / b.b}
+	return ColorfN{a.r / b.r, a.g / b.g, a.b / b.b};
 }
 inline ColorfN operator/(const ColorfN &c, psimd::pack<float> s){
 	const auto vs = 1.f / s;

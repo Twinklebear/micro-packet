@@ -793,6 +793,18 @@ namespace psimd {
   }
 
   template <typename T, int W>
+  inline pack<T, W> pow(const pack<T, W> &v, const float b)
+  {
+    pack<T, W> result;
+
+    #pragma omp simd
+    for (int i = 0; i < W; ++i)
+      result[i] = std::pow(v[i], b);
+
+    return result;
+  }
+
+  template <typename T, int W>
   inline pack<T, W> max(const pack<T, W> &a, const pack<T, W> &b)
   {
     pack<T, W> result;
@@ -907,6 +919,16 @@ namespace psimd {
       result[i] = from[i];
 
     return result;
+  }
+
+  template <typename PACK_T>
+  inline void store(const PACK_T &p, void* _dst)
+  {
+    auto *dst = (typename PACK_T::type*) _dst;
+
+    #pragma omp simd
+    for (int i = 0; i < PACK_T::static_size; ++i)
+      dst[i] = p[i];
   }
 
   template <typename T, int W, typename OFFSET_T>

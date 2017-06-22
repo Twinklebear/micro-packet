@@ -34,7 +34,7 @@ inline T clamp(T x, T min, T max){
 
 // Attempt to solve the quadratic equation. Returns a mask of successful solutions
 // and stores the computed t values in t0 and t1
-psimd::mask solve_quadratic(const psimd::pack<float> a, const psimd::pack<float> b,
+psimd::mask<> solve_quadratic(const psimd::pack<float> a, const psimd::pack<float> b,
 		const psimd::pack<float> c, psimd::pack<float> &t0, psimd::pack<float> &t1);
 
 // A single vec3f
@@ -94,7 +94,7 @@ struct Vec3fN {
 	inline Vec3fN(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
 	inline Vec3fN(Vec3f v)
 		: x(v.x), y(v.y), z(v.z){}
-	inline Vec3fN(psimd::pac<float> x, psimd::pack<float> y, psimd::pack<float> z)
+	inline Vec3fN(psimd::pack<float> x, psimd::pack<float> y, psimd::pack<float> z)
 		: x(x), y(y), z(z){}
 	// Compute length^2 of all N vectors
 	inline psimd::pack<float> length_sqr() const {
@@ -117,10 +117,10 @@ struct Vec3fN {
 	}
 	inline psimd::pack<float> dot(const Vec3fN &vb) const {
 		// TODO: Will the compiler convert this to fmadds?
-		return x * x + y * y + z * z;
+		return x * vb.x + y * vb.y + z * vb.z;
 	}
 	inline Vec3fN cross(const Vec3fN &v) const {
-		return Vec3fN{y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.z}
+		return Vec3fN{y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.z};
 	}
 	inline psimd::pack<float>& operator[](size_t i){
 		switch (i) {
@@ -178,7 +178,7 @@ inline Vec2fN operator+(const Vec2fN &a, const Vec2fN &b){
 	return Vec2fN{a.x + b.x, a.y + b.y};
 }
 inline Vec2fN operator-(const Vec2fN &a, const Vec2fN &b){
-	return Vec2fN{a.x - b.x, a.y - b.y;
+	return Vec2fN{a.x - b.x, a.y - b.y};
 }
 inline Vec2fN operator/(const Vec2fN &a, const Vec2fN &b){
 	return Vec2fN{a.x / b.x, a.y / b.y};
@@ -193,7 +193,7 @@ inline std::ostream& operator<<(std::ostream &os, const Vec2fN &v){
 struct RayN {
 	Vec3fN o, d;
 	psimd::pack<float> t_min, t_max;
-	psimd::mask active;
+	psimd::mask<> active;
 
 	/*
 	 * Create a new group of active rays
@@ -207,7 +207,7 @@ struct RayN {
 		return o + t * d;
 	}
 };
-inline std::ostream& operator<<(std::ostream &os, const Ray8 &r){
+inline std::ostream& operator<<(std::ostream &os, const RayN &r){
 	os << "RayN:\no = " << r.o
 		<< "\nd = " << r.d
 		<< "\nt_max = " << r.t_max

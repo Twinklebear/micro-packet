@@ -1,7 +1,7 @@
 #include "sphere.h"
 
 Sphere::Sphere(Vec3f pos, float radius, int material_id) : pos(pos), radius(radius), material_id(material_id){}
-psimd::mask Sphere::intersect(RayN &ray, DiffGeomN &dg) const {
+psimd::mask<> Sphere::intersect(RayN &ray, DiffGeomN &dg) const {
 	const auto center = Vec3fN{pos};
 	const auto d = center - ray.o;
 	const auto a = ray.d.length_sqr();
@@ -19,21 +19,21 @@ psimd::mask Sphere::intersect(RayN &ray, DiffGeomN &dg) const {
 	t0 = psimd::select(swap_t, t1, t0);
 
 	// Check which hits are within the ray's t range
-	auto in_range = t0 > ray.t_min && t0 < ray.t_max && ray.active && hits;
+	hits = t0 > ray.t_min && t0 < ray.t_max && ray.active && hits;
 	// Check if all rays miss the sphere
 	if (none(hits)) {
 		return hits;
 	}
 
 	// Update t values for rays that did hit
-	ray.t_max = psimd::select(hits, t, ray.t_max);
+	ray.t_max = psimd::select(hits, t0, ray.t_max);
 	const auto point = ray.at(ray.t_max);
 	const auto normal = (point - center).normalized();
 	for (size_t i = 0; i < 3; ++i) {
 		dg.point[i] = psimd::select(hits, point[i], dg.point[i]);
 		dg.normal[i] = psimd::select(hits, normal[i], dg.normal[i]);
 	}
-	dg.material_id = psimd::select(hits, material_id, dg.material_id);
+	dg.material_id = psimd::select(hits, psimd::pack<int>(material_id), dg.material_id);
 	return hits;
 }
 

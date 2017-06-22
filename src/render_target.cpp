@@ -40,7 +40,7 @@ Pixel::Pixel(const Pixel &p) : r(p.r), g(p.g), b(p.b), weight(p.weight){}
 
 RenderTarget::RenderTarget(uint32_t width, uint32_t height)
 	: width(width), height(height), pixels(width * height){}
-void RenderTarget::write_samples(const Vec2fN &p, const ColorfN &c, psimd::mask mask){
+void RenderTarget::write_samples(const Vec2fN &p, const ColorfN &c, psimd::mask<> mask){
 	const auto img_p = p - Vec2fN{0.5};
 	psimd::foreach_active(mask,
 		[&](int i) {
@@ -52,7 +52,6 @@ void RenderTarget::write_samples(const Vec2fN &p, const ColorfN &c, psimd::mask 
 			p.b += c.b[i];
 			p.weight += 1;
 		});
-	}
 }
 bool RenderTarget::save_image(const std::string &file) const {
 	// Compute the correct image from the saved pixel data and write

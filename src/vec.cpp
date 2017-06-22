@@ -1,7 +1,7 @@
 #include "vec.h"
 
 
-psimd::mask solve_quadratic(const psimd::pack<float> a, const psimd::pack<float> b,
+psimd::mask<> solve_quadratic(const psimd::pack<float> a, const psimd::pack<float> b,
 		const psimd::pack<float> c, psimd::pack<float> &t0, psimd::pack<float> &t1)
 {
 	// TODO: I'm curious if the compiler will figure out these can be fmsubs and fmadds and so on

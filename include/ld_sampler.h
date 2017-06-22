@@ -38,7 +38,7 @@ public:
 	 * off in the active mask returned and the masked off components will
 	 * have (-1, -1) as the pixel sample position
 	 */
-	psimd::mask sample(std::mt19937 &rng, Vec2fN &samples);
+	psimd::mask<> sample(std::mt19937 &rng, Vec2fN &samples);
 };
 
 #endif

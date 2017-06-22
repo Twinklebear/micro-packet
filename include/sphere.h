@@ -13,7 +13,7 @@ struct Sphere : Geometry {
 	/*
 	 * Test 8 rays against the sphere, returns masks for the hits (0xff) and misses (0x00)
 	 */
-	psimd::mask intersect(RayN &ray, DiffGeomN &dg) const override;
+	psimd::mask<> intersect(RayN &ray, DiffGeomN &dg) const override;
 };
 
 #endif
