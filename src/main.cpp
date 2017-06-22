@@ -5,7 +5,6 @@
 #include <memory>
 #include <psimd.h>
 #include "geometry.h"
-#include "immintrin.h"
 #include "vec.h"
 #include "mat3.h"
 #include "color.h"
@@ -21,7 +20,7 @@
 #include "ld_sampler.h"
 #include "scene.h"
 
-void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 img_dim, RenderTarget &target,
+void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2fN img_dim, RenderTarget &target,
 			BlockQueue &block_queue){
 	std::random_device rand_device;
 	std::mt19937 rng(rand_device());
@@ -29,20 +28,20 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 i
 	for (auto block = block_queue.next(); block != block_queue.end(); block = block_queue.next()){
 		sampler.select_block(block);
 		while (sampler.has_samples()){
-			auto samples = Vec2f_8{0, 0};
-			Ray8 packet;
+			auto samples = Vec2fN{0, 0};
+			RayN packet;
 			packet.active = sampler.sample(rng, samples);
 			camera.generate_rays(packet, samples / img_dim);
 
-			DiffGeom8 dg;
+			DiffGeomN dg;
 			auto hits = scene.intersect(packet, dg);
 			// If we hit something, shade it, otherwise use the background color (black)
-			auto color = Colorf_8{0};
-			if (_mm256_movemask_ps(hits) != 0){
+			auto color = ColorfN{0};
+			if (any(hits)) {
 				// How does ISPC find the unique values for its foreach_unique loop? Would like to do that
 				// if it will be nicer than this
 				std::array<int32_t, 8> mat_ids;
-				_mm256_storeu_si256((__m256i*)mat_ids.data(), dg.material_id);
+				psimd::store(dg.material_id, mat_ids.data());
 				// std::unique just removes consecutive repeated elements, so sort things first so we
 				// don't get something like -1, 0, -1 or such
 				std::sort(std::begin(mat_ids), std::end(mat_ids));
@@ -51,11 +50,10 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 i
 					if (*it == -1){
 						continue;
 					}
-					const auto use_mat = _mm256_cmpeq_epi32(dg.material_id, _mm256_set1_epi32(*it));
-					auto shade_mask = _mm256_castsi256_ps(use_mat);
-					if (_mm256_movemask_ps(shade_mask) != 0){
+					const auto use_mat = dg.material_id == *it;
+					if (any(shade_mask)) {
 						const auto w_o = -packet.d;
-						Vec3f_8 w_i{0};
+						Vec3fN w_i{0};
 						// Setup occlusion tester and set active ray mask to just be those with
 						// corresponding to tests from hits with the material id being shaded
 						OcclusionTester occlusion;
@@ -63,14 +61,15 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2f_8 i
 						occlusion.rays.active = shade_mask;
 						// We just need to flip the sign bit to change occluded mask to unoccluded mask since
 						// only the sign bit is used by movemask and blendv
-						auto unoccluded = _mm256_xor_ps(occlusion.occluded(scene), _mm256_set1_ps(-0.f));
-						if (_mm256_movemask_ps(unoccluded) != 0){
+						auto unoccluded = !occlusion.occluded(scene);
+						if (any(unoccluded)) {
 							const auto c = scene.materials[*it]->shade(w_o, w_i) * li
-								* _mm256_max_ps(w_i.dot(dg.normal), _mm256_set1_ps(0.f));
-							shade_mask = _mm256_and_ps(shade_mask, unoccluded);
-							color.r = _mm256_blendv_ps(color.r, c.r, shade_mask);
-							color.g = _mm256_blendv_ps(color.g, c.g, shade_mask);
-							color.b = _mm256_blendv_ps(color.b, c.b, shade_mask);
+								* psimd::max(w_i.dot(dg.normal), psimd::pack<float>(0.f));
+							shade_mask = shade_mask && unoccluded;
+
+							for (size_t i = 0; i < 3; ++i) {
+								color[i] = psimd::select(shade_mask, c[i], color[i]);
+							}
 						}
 					}
 				}
@@ -98,7 +97,7 @@ int main(int, char**){
 	const auto camera = PerspectiveCamera{Vec3f{0, 0, -3}, Vec3f{0, 0, 0}, Vec3f{0, 1, 0},
 		60.f, static_cast<float>(width) / height};
 	auto target = RenderTarget{width, height};
-	const auto img_dim = Vec2f_8{static_cast<float>(width), static_cast<float>(height)};
+	const auto img_dim = Vec2fN{static_cast<float>(width), static_cast<float>(height)};
 	const uint32_t block_dim = 8;
 	auto block_queue = BlockQueue{block_dim, width, height};
 

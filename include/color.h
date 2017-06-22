@@ -127,6 +127,22 @@ struct ColorfN {
 			psimd::max(0.f, psimd::min(1.f, g));
 			psimd::max(0.f, psimd::min(1.f, b))};
 	}
+	inline psimd::pack<float>& operator[](int i) {
+		switch (i) {
+			case 0: return r;
+			case 1: return g;
+			case 2: return b;
+			default: assert(false); return b;
+		}
+	}
+	inline const psimd::pack<float>& operator[](int i) const {
+		switch (i) {
+			case 0: return r;
+			case 1: return g;
+			case 2: return b;
+			default: assert(false); return b;
+		}
+	}
 };
 inline ColorfN operator+(const ColorfN &a, const ColorfN &b){
 	return ColorfN{a.r + b.r, a.g + b.g, a.b + b.b}
