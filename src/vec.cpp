@@ -1,51 +1,30 @@
 #include "vec.h"
 
-std::ostream& operator<<(std::ostream &os, const __m256 &v){
-	float *f = (float*)&v;
-	os << "{ ";
-	for (int i = 0; i < 8; ++i){
-		os << f[i];
-		if (i < 7){
-			os << ", ";
-		}
-	}
-	os << " }";
-	return os;
-}
-std::ostream& operator<<(std::ostream &os, const __m256i &v){
-	int *f = (int*)&v;
-	os << "{ ";
-	for (int i = 0; i < 8; ++i){
-		os << f[i];
-		if (i < 7){
-			os << ", ";
-		}
-	}
-	os << " }";
-	return os;
-}
 
-__m256 solve_quadratic(const __m256 a, const __m256 b, const __m256 c, __m256 &t0, __m256 &t1){
-	auto discrim = _mm256_fmsub_ps(b, b, _mm256_mul_ps(_mm256_mul_ps(a, c), _mm256_set1_ps(4.f)));
-	auto solved = _mm256_cmp_ps(discrim, _mm256_set1_ps(0), _CMP_GT_OQ);
+psimd::mask solve_quadratic(const psimd::pack<float> a, const psimd::pack<float> b,
+		const psimd::pack<float> c, psimd::pack<float> &t0, psimd::pack<float> &t1)
+{
+	// TODO: I'm curious if the compiler will figure out these can be fmsubs and fmadds and so on
+	auto discrim = b * b - 4.f * a * c;
+	auto solvable = discrim > 0.f;
 	// Test for the case where none of the equations can be solved (eg. none hit)
-	if ((_mm256_movemask_ps(solved) & 255) == 0){
-		return solved;
+	if (psimd::none(solvable)) {
+		return solvable;
 	}
 	// Compute +/-sqrt(discrim), setting -discrim where we have b < 0
-	discrim = _mm256_sqrt_ps(discrim);
-	auto neg_discrim = _mm256_mul_ps(discrim, _mm256_set1_ps(-1.f));
+	discrim = psimd::sqrt(discrim);
+	auto neg_discrim = -discrim;
 	// Blend the discriminants to pick the right +/- value
 	// Find mask for this with b < 0 set to 1
-	auto mask = _mm256_cmp_ps(b, _mm256_set1_ps(0), _CMP_LT_OQ);
-	discrim = _mm256_blendv_ps(discrim, neg_discrim, mask);
-	auto q = _mm256_mul_ps(_mm256_set1_ps(-0.5f), _mm256_add_ps(b, discrim));
-	auto x = _mm256_div_ps(q, a);
-	auto y = _mm256_div_ps(c, q);
+	auto mask = b < 0.f;
+	discrim = psimd::select(mask, neg_discrim, discrim);
+	auto q = -0.5f * (b + discrim);
+	auto x = q / a;
+	auto y = c / q;
 	// Find which elements have t0 > t1 and compute mask so we can swap them
-	mask = _mm256_cmp_ps(x, y, _CMP_GT_OQ);
-	t0 = _mm256_blendv_ps(x, y, mask);
-	t1 = _mm256_blendv_ps(y, x, mask);
-	return solved;
+	mask = x > y;
+	t0 = psimd::select(mask, y, x);
+	t1 = psimd::select(mask, x, y);
+	return solvable;
 }
 
