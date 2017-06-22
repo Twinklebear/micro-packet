@@ -11,6 +11,7 @@ psimd::mask Plane::intersect(Ray8 &ray, DiffGeom8 &dg) const {
 	if (none(hits)) {
 		return hits;
 	}
+
 	// Update t values for rays that did hit
 	ray.t_max = psimd::select(hits, t, ray.t_max);
 	const auto point = ray.at(ray.t_max);
