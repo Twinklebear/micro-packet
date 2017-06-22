@@ -4,13 +4,13 @@
 #include "vec.h"
 
 /*
- * Structure storing 8 differential geomtry entries
+ * Structure storing N differential geomtry entries
  */
-struct DiffGeom8 {
-	Vec3f_8 point, normal;
-	__m256i material_id;
+struct DiffGeomN {
+	Vec3fN point, normal;
+	psimd::pack<int> material_id;
 
-	DiffGeom8() : point(0), normal(0), material_id(_mm256_set1_epi32(-1)){}
+	DiffGeomN() : point(0), normal(0), material_id(-1){}
 };
 
 #endif
