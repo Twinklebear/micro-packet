@@ -5,20 +5,20 @@
 #include "scene.h"
 
 struct OcclusionTester {
-	Ray8 rays;
+	RayN rays;
 
 	/*
 	 * Set the occlusion tester to check if there's something in between a and b
 	 */
-	inline void set_points(const Vec3f_8 &a, const Vec3f_8 &b){
-		rays = Ray8{a, (b - a).normalized(), 0.001f, 0.999f};
+	inline void set_points(const Vec3fN &a, const Vec3fN &b){
+		rays = RayN{a, (b - a).normalized(), 0.001f, 0.999f};
 	}
 	/*
 	 * Get a mask of point pairs that are occluded in in the scene
 	 */
-	inline __m256 occluded(const Scene &scene){
-		DiffGeom8 dg;
-		return _mm256_and_ps(scene.intersect(rays, dg), rays.active);
+	inline psimd::mask occluded(const Scene &scene){
+		DiffGeomN dg;
+		return scene.intersect(rays, dg) & rays.active;
 	}
 };
 
