@@ -115,7 +115,7 @@ struct Vec3fN {
 		const auto len = 1.f / length();
 		return Vec3fN{x * len, y * len, z * len};
 	}
-	inline psimd::pack<float> dot(const Vec3f_8 &vb) const {
+	inline psimd::pack<float> dot(const Vec3fN &vb) const {
 		// TODO: Will the compiler convert this to fmadds?
 		return x * x + y * y + z * z;
 	}

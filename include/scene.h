@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <memory>
-#include "immintrin.h"
 #include "vec.h"
 #include "diff_geom.h"
 #include "geometry.h"

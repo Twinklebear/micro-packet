@@ -7,7 +7,6 @@
 #include <cmath>
 #include <memory>
 #include <cstdio>
-#include "immintrin.h"
 #include "render_target.h"
 
 /*
