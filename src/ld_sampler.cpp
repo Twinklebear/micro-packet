@@ -35,12 +35,12 @@ void LDSampler::select_block(const std::pair<uint32_t, uint32_t> &b){
 bool LDSampler::has_samples() const {
 	return current.second != start.second + block_dim;
 }
-__m256 LDSampler::sample(std::mt19937 &rng, Vec2f_8 &samples){
+psimd::mask LDSampler::sample(std::mt19937 &rng, Vec2fN &samples){
 	if (!has_samples()){
-		return _mm256_set1_ps(0.f);
+		return psimd::mask(0);
 	}
-	CACHE_ALIGN float x[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
-	CACHE_ALIGN float y[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
+	PSIMD_ALIGN(16) float x[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
+	PSIMD_ALIGN(16) float y[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
 	// Take at most 8 samples per sampling pass since that's how many we can
 	// fit into a packet
@@ -51,12 +51,12 @@ __m256 LDSampler::sample(std::mt19937 &rng, Vec2f_8 &samples){
 	sample2d(n, distrib(rng), distrib(rng), x, y, samples_taken);
 	std::shuffle(x, x + n, rng);
 	std::shuffle(y, y + n, rng);
-	samples.x = _mm256_load_ps(x);
-	samples.y = _mm256_load_ps(y);
+	samples.x = psimd::load(x);
+	samples.y = psimd::load(y);
 	// We use -1 to signal that there is no sample to be taken for the lane, so
 	// compute mask of those samples which shouldn't be used
-	const auto active = _mm256_cmp_ps(samples.x, _mm256_set1_ps(-0.5f), _CMP_GT_OQ);
-	samples += Vec2f_8{static_cast<float>(current.first), static_cast<float>(current.second)};
+	const auto active = samples.x > -0.5f;
+	samples += Vec2fN{static_cast<float>(current.first), static_cast<float>(current.second)};
 
 	samples_taken += n;
 	// We're done sampling this pixel, move to the next one
