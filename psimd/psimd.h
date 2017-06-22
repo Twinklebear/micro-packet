@@ -52,6 +52,9 @@ namespace psimd {
     const T& operator[](int i) const;
           T& operator[](int i);
 
+    template <typename OTHER_T>
+    pack<OTHER_T, W> as();
+
     // Data //
 
     T data[W];
@@ -82,6 +85,19 @@ namespace psimd {
   inline T& pack<T, W>::operator[](int i)
   {
     return data[i];
+  }
+
+  template <typename T, int W>
+  template <typename OTHER_T>
+  inline pack<OTHER_T, W> pack<T, W>::as()
+  {
+    pack<OTHER_T, W> result;
+
+    #pragma omp simd
+    for (int i = 0; i < W; ++i)
+      result[i] = data[i];
+
+    return result;
   }
 
   // pack<> arithmetic operators //////////////////////////////////////////////
@@ -923,8 +939,25 @@ namespace psimd {
     return result;
   }
 
+  template <typename PACK_T>
+  inline PACK_T load(void* _src,
+                     const mask<PACK_T::static_size> &m)
+  {
+    auto *src = (typename PACK_T::type*) _src;
+    PACK_T result;
+
+    #pragma omp simd
+    for (int i = 0; i < PACK_T::static_size; ++i)
+      if (m[i])
+        result[i] = src[i];
+
+    return result;
+  }
+
+  // gather() //
+
   template <typename PACK_T, typename OFFSET_T>
-  inline PACK_T load(void* _src, const pack<OFFSET_T, PACK_T::static_size> &o)
+  inline PACK_T gather(void* _src, const pack<OFFSET_T, PACK_T::static_size> &o)
   {
     auto *src = (typename PACK_T::type*) _src;
     PACK_T result;
@@ -932,6 +965,22 @@ namespace psimd {
     #pragma omp simd
     for (int i = 0; i < PACK_T::static_size; ++i)
       result[i] = src[o[i]];
+
+    return result;
+  }
+
+  template <typename PACK_T, typename OFFSET_T>
+  inline PACK_T gather(void* _src,
+                       const pack<OFFSET_T, PACK_T::static_size> &o,
+                       const mask<PACK_T::static_size> &m)
+  {
+    auto *src = (typename PACK_T::type*) _src;
+    PACK_T result;
+
+    #pragma omp simd
+    for (int i = 0; i < PACK_T::static_size; ++i)
+      if(m[i])
+        result[i] = src[o[i]];
 
     return result;
   }
@@ -948,16 +997,45 @@ namespace psimd {
       dst[i] = p[i];
   }
 
-  template <typename PACK_T, typename OFFSET_T>
+  template <typename PACK_T>
   inline void store(const PACK_T &p,
                     void* _dst,
-                    const pack<OFFSET_T, PACK_T::static_size> &o)
+                    const mask<PACK_T::static_size> &m)
+  {
+    auto *dst = (typename PACK_T::type*) _dst;
+
+    #pragma omp simd
+    for (int i = 0; i < PACK_T::static_size; ++i)
+      if (m[i])
+        dst[i] = p[i];
+  }
+
+  // scatter() //
+
+  template <typename PACK_T, typename OFFSET_T>
+  inline void scatter(const PACK_T &p,
+                      void* _dst,
+                      const pack<OFFSET_T, PACK_T::static_size> &o)
   {
     auto *dst = (typename PACK_T::type*) _dst;
 
     #pragma omp simd
     for (int i = 0; i < PACK_T::static_size; ++i)
       dst[o[i]] = p[i];
+  }
+
+  template <typename PACK_T, typename OFFSET_T>
+  inline void scatter(const PACK_T &p,
+                      void* _dst,
+                      const pack<OFFSET_T, PACK_T::static_size> &o,
+                      const mask<PACK_T::static_size> &m)
+  {
+    auto *dst = (typename PACK_T::type*) _dst;
+
+    #pragma omp simd
+    for (int i = 0; i < PACK_T::static_size; ++i)
+      if (m[i])
+        dst[o[i]] = p[i];
   }
 
 } // ::psimd
