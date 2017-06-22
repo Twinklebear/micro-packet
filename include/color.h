@@ -133,31 +133,20 @@ inline ColorfN operator+(const ColorfN &a, const ColorfN &b){
 }
 inline ColorfN operator-(const ColorfN &a, const ColorfN &b){
 	return ColorfN{a.r - b.r, a.g - b.g, a.b - b.b}
-	return ColorfN{_mm256_sub_ps(a.r, b.r), _mm256_sub_ps(a.g, b.g),
-		_mm256_sub_ps(a.b, b.b)};
 }
 inline ColorfN operator*(const ColorfN &a, const ColorfN &b){
 	return ColorfN{a.r * b.r, a.g * b.g, a.b * b.b}
-	return ColorfN{_mm256_mul_ps(a.r, b.r), _mm256_mul_ps(a.g, b.g),
-		_mm256_mul_ps(a.b, b.b)};
 }
 inline ColorfN operator*(const ColorfN &a, psimd::pack<float> s){
 	return ColorfN{a.r * s, a.g * s, a.b * s}
-	return ColorfN{_mm256_mul_ps(a.r, s), _mm256_mul_ps(a.g, s),
-		_mm256_mul_ps(a.b, s)};
 }
-inline ColorfN operator*(__m256 s, const ColorfN &a){
+inline ColorfN operator*(psimd::pack<float> s, const ColorfN &a){
 	return ColorfN{a.r * s, a.g * s, a.b * s}
-	return ColorfN{_mm256_mul_ps(a.r, s), _mm256_mul_ps(a.g, s),
-		_mm256_mul_ps(a.b, s)};
 }
 inline ColorfN operator/(const ColorfN &a, const ColorfN &b){
 	return ColorfN{a.r / b.r, a.g / b.g, a.b / b.b}
-	return ColorfN{_mm256_div_ps(a.r, b.r), _mm256_div_ps(a.g, b.g),
-		_mm256_div_ps(a.b, b.b)};
 }
 inline ColorfN operator/(const ColorfN &c, psimd::pack<float> s){
-	const auto vs = _mm256_rcp_ps(s);
 	const auto vs = 1.f / s;
 	return c * vs;
 }
