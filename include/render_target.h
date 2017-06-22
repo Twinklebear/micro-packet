@@ -38,7 +38,7 @@ public:
 	 * Write a color samples to the image, the mask will specify
 	 * which color should actually be stored (0xff to store)
 	 */
-	void write_samples(const Vec2f_8 &p, const Colorf_8 &c, __m256 mask);
+	void write_samples(const Vec2fN &p, const ColorfN &c, psimd::mask mask);
 	//Save the image or depth buffer to the desired file
 	bool save_image(const std::string &file) const;
 	uint32_t get_width() const;

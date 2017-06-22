@@ -41,25 +41,18 @@ Pixel::Pixel(const Pixel &p) : r(p.r), g(p.g), b(p.b), weight(p.weight){}
 
 RenderTarget::RenderTarget(uint32_t width, uint32_t height)
 	: width(width), height(height), pixels(width * height){}
-void RenderTarget::write_samples(const Vec2f_8 &p, const Colorf_8 &c, __m256 mask){
-	// Compute the discrete pixel coordinates which the sample hits
-	const auto img_p = p - Vec2f_8{0.5};
-	const auto *img_x = (const float*)&img_p.x;
-	const auto *img_y = (const float*)&img_p.y;
-	const auto *cr = (const float*)&c.r;
-	const auto *cg = (const float*)&c.g;
-	const auto *cb = (const float*)&c.b;
-	const auto write_mask = _mm256_movemask_ps(mask);
-	for (int i = 0, mask = 1; i < 8; ++i, mask <<= 1){
-		if (write_mask & mask){
-			int ix = clamp(static_cast<int>(img_x[i]), 0, static_cast<int>(width) - 1);
-			int iy = clamp(static_cast<int>(img_y[i]), 0, static_cast<int>(height) - 1);
+void RenderTarget::write_samples(const Vec2fN &p, const ColorfN &c, psimd::mask mask){
+	const auto img_p = p - Vec2fN{0.5};
+	psimd::foreach_active(mask,
+		[&](int i) {
+			int ix = clamp(static_cast<int>(img_p.x[i]), 0, static_cast<int>(width) - 1);
+			int iy = clamp(static_cast<int>(img_p.y[i]), 0, static_cast<int>(height) - 1);
 			Pixel &p = pixels[iy * width + ix];
-			p.r += cr[i];
-			p.g += cg[i];
-			p.b += cb[i];
+			p.r += c.r[i];
+			p.g += c.g[i];
+			p.b += c.b[i];
 			p.weight += 1;
-		}
+		});
 	}
 }
 bool RenderTarget::save_image(const std::string &file) const {
