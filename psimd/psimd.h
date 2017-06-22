@@ -908,18 +908,35 @@ namespace psimd {
 
   // pack<> memory operations /////////////////////////////////////////////////
 
+  // load() //
+
   template <typename PACK_T>
-  inline PACK_T load(void* _from)
+  inline PACK_T load(void* _src)
   {
-    auto *from = (typename PACK_T::type*) _from;
+    auto *src = (typename PACK_T::type*) _src;
     PACK_T result;
 
     #pragma omp simd
     for (int i = 0; i < PACK_T::static_size; ++i)
-      result[i] = from[i];
+      result[i] = src[i];
 
     return result;
   }
+
+  template <typename PACK_T, typename OFFSET_T>
+  inline PACK_T load(void* _src, const pack<OFFSET_T, PACK_T::static_size> &o)
+  {
+    auto *src = (typename PACK_T::type*) _src;
+    PACK_T result;
+
+    #pragma omp simd
+    for (int i = 0; i < PACK_T::static_size; ++i)
+      result[i] = src[o[i]];
+
+    return result;
+  }
+
+  // store() //
 
   template <typename PACK_T>
   inline void store(const PACK_T &p, void* _dst)
@@ -931,11 +948,15 @@ namespace psimd {
       dst[i] = p[i];
   }
 
-  template <typename T, int W, typename OFFSET_T>
-  inline void store(const pack<T, W> &p, T* dst, const pack<OFFSET_T, W> &o)
+  template <typename PACK_T, typename OFFSET_T>
+  inline void store(const PACK_T &p,
+                    void* _dst,
+                    const pack<OFFSET_T, PACK_T::static_size> &o)
   {
+    auto *dst = (typename PACK_T::type*) _dst;
+
     #pragma omp simd
-    for (int i = 0; i < W; ++i)
+    for (int i = 0; i < PACK_T::static_size; ++i)
       dst[o[i]] = p[i];
   }
 
