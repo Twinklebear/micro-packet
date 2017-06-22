@@ -90,7 +90,7 @@ uint32_t RenderTarget::get_width() const {
 uint32_t RenderTarget::get_height() const {
 	return height;
 }
-void RenderTarget::get_colorbuf(std::vector<Color24> &img) const { 
+void RenderTarget::get_colorbuf(std::vector<Color24> &img) const {
 	// Compute the correct image from the saved pixel data
 	img.resize(width * height);
 	for (uint32_t y = 0; y < height; ++y){
