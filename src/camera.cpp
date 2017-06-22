@@ -14,14 +14,14 @@ PerspectiveCamera::PerspectiveCamera(Vec3f pos, Vec3f center, Vec3f up, float fo
 	screen_du = dx * dim_x;
 	screen_dv = dy * dim_y;
 }
-void PerspectiveCamera::generate_rays(Ray8 &rays, const Vec2f_8 &samples) const {
-	rays.o = Vec3f_8{pos.x, pos.y, pos.z};
-	rays.d = Vec3f_8{dir_top_left.x, dir_top_left.y, dir_top_left.z};
-	const auto u_step = samples.x * Vec3f_8{screen_du.x, screen_du.y, screen_du.z};
-	const auto v_step = samples.y * Vec3f_8{screen_dv.x, screen_dv.y, screen_dv.z};
+void PerspectiveCamera::generate_rays(RayN &rays, const Vec2fN &samples) const {
+	rays.o = Vec3fN{pos.x, pos.y, pos.z};
+	rays.d = Vec3fN{dir_top_left.x, dir_top_left.y, dir_top_left.z};
+	const auto u_step = samples.x * Vec3fN{screen_du.x, screen_du.y, screen_du.z};
+	const auto v_step = samples.y * Vec3fN{screen_dv.x, screen_dv.y, screen_dv.z};
 	rays.d = rays.d + u_step + v_step;
 	rays.d.normalize();
-	rays.t_min = _mm256_set1_ps(0);
-	rays.t_max = _mm256_set1_ps(INFINITY);
+	rays.t_min = 0;
+	rays.t_max = INFINITY;
 }
 

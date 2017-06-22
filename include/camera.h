@@ -1,7 +1,6 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "immintrin.h"
 #include "vec.h"
 
 /*
@@ -18,7 +17,7 @@ struct PerspectiveCamera {
 	 * screen positions should be normalized to be between [0, 1] in
 	 * each dimension
 	 */
-	void generate_rays(Ray8 &rays, const Vec2f_8 &samples) const;
+	void generate_rays(RayN &rays, const Vec2fN &samples) const;
 };
 
 #endif
