@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 #include <memory>
+#include <psimd.h>
 #include "geometry.h"
 #include "immintrin.h"
 #include "vec.h"
