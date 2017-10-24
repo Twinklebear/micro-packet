@@ -7,7 +7,7 @@ struct Geometry {
 	/*
 	 * Test a ray packet for intersection against the object
 	 */
-	virtual psimd::mask<> intersect(RayN &ray, DiffGeomN &dg) const = 0;
+	virtual tsimd::vmask intersect(RayN &ray, DiffGeomN &dg) const = 0;
 };
 
 #endif

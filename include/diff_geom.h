@@ -8,7 +8,7 @@
  */
 struct DiffGeomN {
 	Vec3fN point, normal;
-	psimd::pack<int> material_id;
+	tsimd::vint material_id;
 
 	DiffGeomN() : point(0), normal(0), material_id(-1){}
 };

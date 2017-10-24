@@ -35,12 +35,12 @@ void LDSampler::select_block(const std::pair<uint32_t, uint32_t> &b){
 bool LDSampler::has_samples() const {
 	return current.second != start.second + block_dim;
 }
-psimd::mask<> LDSampler::sample(std::mt19937 &rng, Vec2fN &samples){
+tsimd::vmask LDSampler::sample(std::mt19937 &rng, Vec2fN &samples){
 	if (!has_samples()){
-		return psimd::mask<>(0);
+		return tsimd::vmask(0);
 	}
-	PSIMD_ALIGN(16) float x[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
-	PSIMD_ALIGN(16) float y[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
+	TSIMD_ALIGN(16) float x[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
+	TSIMD_ALIGN(16) float y[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
 	// Take at most 8 samples per sampling pass since that's how many we can
 	// fit into a packet
@@ -51,8 +51,8 @@ psimd::mask<> LDSampler::sample(std::mt19937 &rng, Vec2fN &samples){
 	sample2d(n, distrib(rng), distrib(rng), x, y, samples_taken);
 	std::shuffle(x, x + n, rng);
 	std::shuffle(y, y + n, rng);
-	samples.x = psimd::load<psimd::pack<float>>(x);
-	samples.y = psimd::load<psimd::pack<float>>(y);
+	samples.x = tsimd::load<tsimd::vfloat>(x);
+	samples.y = tsimd::load<tsimd::vfloat>(y);
 	// We use -1 to signal that there is no sample to be taken for the lane, so
 	// compute mask of those samples which shouldn't be used
 	const auto active = samples.x > -0.5f;

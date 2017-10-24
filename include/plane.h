@@ -12,7 +12,7 @@ struct Plane : Geometry {
 	int material_id;
 
 	Plane(Vec3f pos, Vec3f normal, int material_id);
-	psimd::mask<> intersect(RayN &ray, DiffGeomN &dg) const override;
+	tsimd::vmask intersect(RayN &ray, DiffGeomN &dg) const override;
 };
 
 #endif

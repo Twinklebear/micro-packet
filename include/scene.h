@@ -20,7 +20,7 @@ struct Scene {
 	 * Compute the intersection of the ray packet with the scene
 	 * returns mask of rays that hit something
 	 */
-	psimd::mask<> intersect(RayN &rays, DiffGeomN &dg) const;
+	tsimd::vmask intersect(RayN &rays, DiffGeomN &dg) const;
 };
 
 #endif

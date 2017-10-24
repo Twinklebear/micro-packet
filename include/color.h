@@ -87,22 +87,22 @@ bool operator!=(const Colorf &a, const Colorf &b);
 std::ostream& operator<<(std::ostream &os, const Colorf &c);
 
 // Compute sRGB values for some color channel
-inline psimd::pack<float> convert_srgb(psimd::pack<float> v){
+inline tsimd::vfloat convert_srgb(tsimd::vfloat v){
 	const float a = 0.055f;
 	const float b = 1.f / 2.4f;
 	const auto mask = v <= 0.0031308f;
 	// We need to compute both branches for the sRGB conversion then pick
 	// the right one based on the mask
 	const auto y = v * 12.92f;
-	const auto z = 1.055f * psimd::pow(v, b) - a;
-	return psimd::select(mask, z, y);
+	const auto z = 1.055f * tsimd::pow(v, b) - a;
+	return tsimd::select(mask, z, y);
 }
 
 /*
  * Floating point color struct storing N RGB colors
  */
 struct ColorfN {
-	psimd::pack<float> r, g, b;
+	tsimd::vfloat r, g, b;
 
 	/*
 	 * Initialize the RGB values to the same value
@@ -113,25 +113,25 @@ struct ColorfN {
 	 */
 	inline ColorfN(float r, float g, float b) : r(r), g(g), b(b){}
 	inline ColorfN(Colorf c) : r(c.r), g(c.g), b(c.b){}
-	inline ColorfN(psimd::pack<float> r, psimd::pack<float> g, psimd::pack<float> b) : r(r), g(g), b(b){}
+	inline ColorfN(tsimd::vfloat r, tsimd::vfloat g, tsimd::vfloat b) : r(r), g(g), b(b){}
 	/*
 	 * Normalize the floating point color values to be clamped between 0-1
 	 */
 	inline void normalize(){
-		const psimd::pack<float> zero(0.f);
-		const psimd::pack<float> one(1.f); 
-		r = psimd::max(zero, psimd::min(one, r));
-		g = psimd::max(zero, psimd::min(one, g));
-		b = psimd::max(zero, psimd::min(one, b));
+		const tsimd::vfloat zero(0.f);
+		const tsimd::vfloat one(1.f); 
+		r = tsimd::max(zero, tsimd::min(one, r));
+		g = tsimd::max(zero, tsimd::min(one, g));
+		b = tsimd::max(zero, tsimd::min(one, b));
 	}
 	inline ColorfN normalized() const {
-		const psimd::pack<float> zero(0.f);
-		const psimd::pack<float> one(1.f); 
-		return ColorfN(psimd::max(zero, psimd::min(one, r)),
-			psimd::max(zero, psimd::min(one, g)),
-			psimd::max(zero, psimd::min(one, b)));
+		const tsimd::vfloat zero(0.f);
+		const tsimd::vfloat one(1.f); 
+		return ColorfN(tsimd::max(zero, tsimd::min(one, r)),
+			tsimd::max(zero, tsimd::min(one, g)),
+			tsimd::max(zero, tsimd::min(one, b)));
 	}
-	inline psimd::pack<float>& operator[](int i) {
+	inline tsimd::vfloat& operator[](int i) {
 		switch (i) {
 			case 0: return r;
 			case 1: return g;
@@ -139,7 +139,7 @@ struct ColorfN {
 			default: assert(false); return b;
 		}
 	}
-	inline const psimd::pack<float>& operator[](int i) const {
+	inline const tsimd::vfloat& operator[](int i) const {
 		switch (i) {
 			case 0: return r;
 			case 1: return g;
@@ -157,16 +157,16 @@ inline ColorfN operator-(const ColorfN &a, const ColorfN &b){
 inline ColorfN operator*(const ColorfN &a, const ColorfN &b){
 	return ColorfN{a.r * b.r, a.g * b.g, a.b * b.b};
 }
-inline ColorfN operator*(const ColorfN &a, psimd::pack<float> s){
+inline ColorfN operator*(const ColorfN &a, tsimd::vfloat s){
 	return ColorfN{a.r * s, a.g * s, a.b * s};
 }
-inline ColorfN operator*(psimd::pack<float> s, const ColorfN &a){
+inline ColorfN operator*(tsimd::vfloat s, const ColorfN &a){
 	return ColorfN{a.r * s, a.g * s, a.b * s};
 }
 inline ColorfN operator/(const ColorfN &a, const ColorfN &b){
 	return ColorfN{a.r / b.r, a.g / b.g, a.b / b.b};
 }
-inline ColorfN operator/(const ColorfN &c, psimd::pack<float> s){
+inline ColorfN operator/(const ColorfN &c, tsimd::vfloat s){
 	const auto vs = 1.f / s;
 	return c * vs;
 }

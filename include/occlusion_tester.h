@@ -16,7 +16,7 @@ struct OcclusionTester {
 	/*
 	 * Get a mask of point pairs that are occluded in in the scene
 	 */
-	inline psimd::mask<> occluded(const Scene &scene){
+	inline tsimd::vmask occluded(const Scene &scene){
 		DiffGeomN dg;
 		return scene.intersect(rays, dg) && rays.active;
 	}

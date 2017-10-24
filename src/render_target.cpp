@@ -40,9 +40,9 @@ Pixel::Pixel(const Pixel &p) : r(p.r), g(p.g), b(p.b), weight(p.weight){}
 
 RenderTarget::RenderTarget(uint32_t width, uint32_t height)
 	: width(width), height(height), pixels(width * height){}
-void RenderTarget::write_samples(const Vec2fN &p, const ColorfN &c, psimd::mask<> mask){
+void RenderTarget::write_samples(const Vec2fN &p, const ColorfN &c, tsimd::vmask mask){
 	const auto img_p = p - Vec2fN{0.5};
-	psimd::foreach_active(mask,
+	tsimd::foreach_active(mask,
 		[&](int i) {
 			int ix = clamp(static_cast<int>(img_p.x[i]), 0, static_cast<int>(width) - 1);
 			int iy = clamp(static_cast<int>(img_p.y[i]), 0, static_cast<int>(height) - 1);

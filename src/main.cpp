@@ -3,7 +3,7 @@
 #include <random>
 #include <vector>
 #include <memory>
-#include <psimd.h>
+#include <tsimd.h>
 #include "geometry.h"
 #include "vec.h"
 #include "color.h"
@@ -36,11 +36,11 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2fN im
 			auto hits = scene.intersect(packet, dg);
 			// If we hit something, shade it, otherwise use the background color (black)
 			auto color = ColorfN{0};
-			if (psimd::any(hits)) {
+			if (tsimd::any(hits)) {
 				// How does ISPC find the unique values for its foreach_unique loop? Would like to do that
 				// if it will be nicer than this
 				std::array<int32_t, 8> mat_ids;
-				psimd::store(dg.material_id, static_cast<void*>(mat_ids.data()));
+				tsimd::store(dg.material_id, static_cast<void*>(mat_ids.data()));
 				// std::unique just removes consecutive repeated elements, so sort things first so we
 				// don't get something like -1, 0, -1 or such
 				std::sort(std::begin(mat_ids), std::end(mat_ids));
@@ -50,7 +50,7 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2fN im
 						continue;
 					}
 					auto shade_mask = dg.material_id == *it;
-					if (psimd::any(shade_mask)) {
+					if (tsimd::any(shade_mask)) {
 						const auto w_o = -packet.d;
 						Vec3fN w_i{0};
 						// Setup occlusion tester and set active ray mask to just be those with
@@ -61,13 +61,13 @@ void render(const Scene &scene, const PerspectiveCamera &camera, const Vec2fN im
 						// We just need to flip the sign bit to change occluded mask to unoccluded mask since
 						// only the sign bit is used by movemask and blendv
 						auto unoccluded = !occlusion.occluded(scene);
-						if (psimd::any(unoccluded)) {
+						if (tsimd::any(unoccluded)) {
 							const auto c = scene.materials[*it]->shade(w_o, w_i) * li
-								* psimd::max(w_i.dot(dg.normal), psimd::pack<float>(0.f));
+								* tsimd::max(w_i.dot(dg.normal), tsimd::vfloat(0.f));
 							shade_mask = shade_mask && unoccluded;
 
 							for (size_t i = 0; i < 3; ++i) {
-								color[i] = psimd::select(shade_mask, c[i], color[i]);
+								color[i] = tsimd::select(shade_mask, c[i], color[i]);
 							}
 						}
 					}
